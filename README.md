@@ -1,33 +1,94 @@
-# adblockplus.org web content #
+# CMS #
 
-The web content of the adblockplus.org domain is generated automatically from
-the files in this repository.
+We use this CMS for [adblockplus.org](https://github.com/adblockplus/web.adblockplus.org/)
+and related websites. It converts a directory with content data into static
+files. You are free to use it for other projects but please keep in mind that we
+make no stability guarantees whatsoever and might change functionality any time.
 
-## Testing your changes ##
+## How to use ##
 
-You can easily test your changes to these files locally. What you need:
+### Running the test server ###
+
+The test server will convert your content directory on the fly, your changes
+will become visible immediately. To run it you need:
 
 * Python 2.7
 * [Flask](http://flask.pocoo.org/), [Jinja2](http://jinja.pocoo.org/) and
   [Markdown](https://pypi.python.org/pypi/Markdown) modules (can be installed by
   running `easy_install Flask Jinja2 Markdown` from the command line)
 * A current copy of the
-  [sitescripts repository](https://hg.adblockplus.org/sitescripts/) (can be
-  downloaded from the web or cloned via
-  `hg clone https://hg.adblockplus.org/sitescripts/`)
+  [cms repository](https://github.com/adblockplus/cms/) (can be
+  [downloaded as ZIP file](https://github.com/adblockplus/cms/archive/master.zip)
+  or cloned via `git clone https://github.com/adblockplus/cms.git`)
 
-Run the following command from the directory of the sitescripts repository:
+Run the `runserver.py` script from your content directory, e.g.:
 
-    python -m sitescripts.cms.bin.test_server www_directory
+    python ../cms/runserver.py
 
-Here `www_directory` should be replaced by the directory of this repository.
-This will start a local web server on port 5000, e.g. you can open the about
-page as [http://localhost:5000/en/about](http://localhost:5000/en/about).
+Alternatively, the content directory could also be specified as command line
+parameter of `runserver.py`. This will start a local web server on port 5000,
+e.g. the page the page `pages/example.md` will be accessible under
+`http://localhost:5000/en/example`.
 
-## Configuration ##
+Note that the test server is inefficient and shouldn't be run in production.
+There you should generate static files as explained below.
 
-Repository configuration is stored in the `settings.ini` file. The following
-sections can be defined:
+### Generating the standalone test server ###
+
+The standalone test server is a single binary, without any further dependencies.
+It can be copied to another system and will no longer require Python or any of
+its modules. In order to generate the standalone test server you need all the
+prerequisites required to run the test server and
+[PyInstaller](https://github.com/pyinstaller/pyinstaller/wiki). PyInstaller can
+be installed by running `easy_install pyinstaller`.
+
+Run the following command from the directory of the `cms` repository:
+
+    pyinstaller runserver.spec
+
+If successful, this will put the standalone test server into the `dist`
+directory.
+
+### Generating static files ###
+
+On your production server you should convert the content directory into static
+files. To do that you need:
+
+* Python 2.7
+* [Jinja2](http://jinja.pocoo.org/) and
+  [Markdown](https://pypi.python.org/pypi/Markdown) modules (can be installed by
+  running `easy_install Jinja2 Markdown` from the command line)
+* A current copy of the
+  [cms repository](https://github.com/adblockplus/cms/) (can be
+  [downloaded as ZIP file](https://github.com/adblockplus/cms/archive/master.zip)
+  or cloned via `git clone https://github.com/adblockplus/cms.git`)
+
+Run the following command from the directory of the `cms` repository:
+
+    python -m cms.bin.generate_static_pages www_directory target_directory
+
+Here `www_directory` should be replaced by the path to your content directory.
+`target_directory` is the path where static files will be placed..
+
+## Content structure ##
+
+Currently, the following directories of your content directory will be
+considered:
+
+* `filters`: Custom Jinja2 filters
+* `includes`: Various include files
+* `locales`: Localization files
+* `pages`: User-visible pages
+* `static`: Static content
+* `templates`: Page layout templates
+
+There should also be a `settings.ini` file with configuration.
+
+All of these are explained in more detail below.
+
+### Configuration (settings.ini) ###
+
+The following sections can be defined in `settings.ini`:
 
 * `[general]`: following settings should be listed here:
   * `defaultlocale`: The fallback locale, to be used whenever no localized
@@ -44,10 +105,10 @@ sections can be defined:
   locale file, not the one matching its name (to be used when multiple pages
   share localization data).
 
-## Locales ##
+### Localization files ###
 
 The language-specific data is stored in the `locales` directory. Each language
-(identified by its locale code) is given a subdirectory here. The `json` files
+(identified by its locale code) is given a subdirectory here. The `.json` files
 contain localizable strings using the following format:
 
     {
@@ -64,7 +125,7 @@ image can be placed into the `locales/en` directory and a German version
 of the same image into the `locales/de` directory. E.g. the file
 `locales/en/foo.png` will be available on the server under the URL `/en/foo.png`.
 
-## Pages ##
+### Pages ###
 
 The pages are defined in the `pages` directory. The file extension defines the
 format in which a page is specified and won't be visible on the web server.
@@ -97,7 +158,7 @@ Include files should be placed into the `includes` directory of the repository.
 In the case above the contents of `includes/foo.md` or `includes/foo.tmpl` will
 be inserted (whichever is present).
 
-### Markdown format (md) ###
+#### Markdown format (md) ####
 
 This format should normally be used, it allows the pages to be defined using the
 [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax. Raw HTML
@@ -119,13 +180,13 @@ Other pages should be linked by using their name as link target (relative links)
 these links will be resolved to point to the most appropriate page language.
 Embedding localizable images works the same, use the image name as image source.
 
-### Raw HTML format (raw) ###
+#### Raw HTML format (raw) ####
 
 This format is similar to the Markdown format but uses regular HTML syntax.
 No processing is performed beyond inserting localized strings and resolving
 links to pages and images. This format is mainly meant for legacy content.
 
-### Jinja2 format (tmpl) ###
+#### Jinja2 format (tmpl) ####
 
 Complicated pages can be defined using the
 [Jinja2 template format](http://jinja.pocoo.org/docs/templates/). Automatic
@@ -152,13 +213,13 @@ Following custom filters can be used:
 * `toclist(html)`: extracts a list of headings from HTML code, this can be used
   to generate a table of contents.
 
-## Static files ##
+### Static files ###
 
 Any files located in the `static` directory will be available on the server
 unchanged. The file `static/css/foo.css` will be available under the URL
 `/css/foo.css`.
 
-## Templates ##
+### Templates ###
 
 The templates specified in the `templates` directory specify the overall
 structure that is common for all pages. These templates should have the file
@@ -171,3 +232,12 @@ The differences to pages using the same format are:
 
 By default, `default.tmpl` will be used for all pages. If other templates are
 defined, the pages need to choose them explicitly using the `template` setting.
+
+### Custom filters ###
+
+The `filters` directory can define custom Jinja2 filters which will be available
+in all Jinja2 templates. The file name defines the filter name, e.g.
+`myfilter.py` will define a filter named `myfilter`. This file should also
+contain a function called `myfilter`, this one will be called when the filter is
+invoked. For more information on Jinja2 filters see
+[official documentation](http://jinja.pocoo.org/docs/dev/api/#writing-filters).
