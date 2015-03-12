@@ -16,7 +16,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, imp, re, jinja2, markdown
-from ..utils import get_custom_template_environment
 
 # Monkey-patch Markdown's isBlockLevel function to ensure that no paragraphs are
 # inserted into the <head> tag
@@ -226,7 +225,8 @@ class TemplateConverter(Converter):
       filters[func] = getattr(module, func)
       filters[func].module_ref = module  # Prevent garbage collection
 
-    self._env = get_custom_template_environment(filters, self._SourceLoader(self._params["source"]))
+    self._env = jinja2.Environment(loader=self._SourceLoader(self._params["source"]), autoescape=True)
+    self._env.filters.update(filters)
 
   def get_html(self, source):
     template = self._env.from_string(source)

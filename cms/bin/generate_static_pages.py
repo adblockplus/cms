@@ -16,9 +16,17 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os, re, errno, codecs
-from ...utils import setupStderr, cached
 from ..utils import process_page
 from ..sources import MercurialSource
+
+def memoize(func):
+  memoized = {}
+  def wrapper(*args):
+    try:
+      return memoized[args]
+    except KeyError:
+      return memoized.setdefault(args, func(*args))
+  return wrapper
 
 def generate_pages(repo, output_dir):
   known_files = set()
@@ -48,11 +56,11 @@ def generate_pages(repo, output_dir):
   with MercurialSource(repo) as source:
     # Cache the result for some functions - we can assume here that the data
     # never changes
-    source.resolve_link = cached(float("Infinity"))(source.resolve_link)
-    source.read_config = cached(float("Infinity"))(source.read_config)
-    source.read_template = cached(float("Infinity"))(source.read_template)
-    source.read_locale = cached(float("Infinity"))(source.read_locale)
-    source.read_include = cached(float("Infinity"))(source.read_include)
+    source.resolve_link = memoize(source.resolve_link)
+    source.read_config = memoize(source.read_config)
+    source.read_template = memoize(source.read_template)
+    source.read_locale = memoize(source.read_locale)
+    source.read_include = memoize(source.read_include)
 
     locales = list(source.list_locales())
     for page, format in source.list_pages():
@@ -89,7 +97,6 @@ def generate_pages(repo, output_dir):
   remove_unknown(output_dir)
 
 if __name__ == "__main__":
-  setupStderr()
   if len(sys.argv) < 3:
     print >>sys.stderr, "Usage: %s source_repository output_dir" % sys.argv[0]
     sys.exit(1)

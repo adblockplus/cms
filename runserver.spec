@@ -1,7 +1,7 @@
-# PyInstaller spec, run "pyinstaller sitescripts/cms/runserver.spec" from sitescripts root to build
+# PyInstaller spec, run "pyinstaller runserver.spec" from repository root to build
 
 a = Analysis(
-  ['sitescripts/cms/bin/runserver.py'],
+  ['runserver.py'],
   pathex=['.'],
   hiddenimports=[],
   excludes=['sqlite3', 'django', 'ssl', '_ssl', 'OpenSSL', '_hashlib', 'unittest'],

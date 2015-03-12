@@ -16,12 +16,11 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os, flask
-from ...utils import setupStderr
 from ..utils import process_page
 from ..sources import FileSource
 from ..converters import converters
 
-app = flask.Flask("sitescripts.cms.bin.test_server")
+app = flask.Flask("cms.bin.test_server")
 source = None
 
 mime_types = {
@@ -67,7 +66,6 @@ def show(path=""):
   return data, 200, {"Content-Type": mime}
 
 if __name__ == "__main__":
-  setupStderr()
   if len(sys.argv) < 2:
     print >>sys.stderr, "Usage: %s source_dir" % sys.argv[0]
     sys.exit(1)
@@ -75,6 +73,6 @@ if __name__ == "__main__":
   source = FileSource(sys.argv[1])
 
   # Make sure to "fix" argv to ensure that restart can succeed
-  sys.argv[0:1] = ["-m", "sitescripts.cms.bin.test_server"]
+  sys.argv[0:1] = ["-m", "cms.bin.test_server"]
 
   app.run(debug=True)
