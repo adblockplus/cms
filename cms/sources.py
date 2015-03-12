@@ -42,7 +42,7 @@ class Source:
     if self.has_localizable_file(default_locale, checked_page):
       if not self.has_localizable_file(locale, checked_page):
         locale = default_locale
-    elif self.has_locale(default_locale, checked_page):
+    elif self.has_page(checked_page):
       if not self.has_locale(locale, checked_page):
         locale = default_locale
     else:
@@ -74,8 +74,15 @@ class Source:
       format = ext[1:].lower()
       yield root, format
 
-  def has_page(self, page, format):
-    return self.has_file(self.page_filename(page, format))
+  def has_page(self, page, format=None):
+    if format is None:
+      from .converters import converters
+      return any(
+        self.has_page(page, format)
+        for format in converters.iterkeys()
+      )
+    else:
+      return self.has_file(self.page_filename(page, format))
 
   def read_page(self, page, format):
     return self.read_file(self.page_filename(page, format))
