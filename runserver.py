@@ -7,5 +7,6 @@ import runpy, sys, os
 import cms.bin.test_server
 import markdown.extensions.attr_list
 
-sys.argv[1:] = [os.curdir]
+if len(sys.argv) < 2:
+  sys.argv.append(os.curdir)
 runpy.run_module("cms.bin.test_server", run_name="__main__")

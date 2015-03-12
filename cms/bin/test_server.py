@@ -72,7 +72,4 @@ if __name__ == "__main__":
 
   source = FileSource(sys.argv[1])
 
-  # Make sure to "fix" argv to ensure that restart can succeed
-  sys.argv[0:1] = ["-m", "cms.bin.test_server"]
-
   app.run(debug=True)
