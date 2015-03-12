@@ -335,7 +335,8 @@ class TemplateConverter(Converter):
     return structured
 
 converters = {
-  "raw": RawConverter,
+  "raw": RawConverter,    # deprecated, will be removed soon
+  "html": RawConverter,
   "md": MarkdownConverter,
   "tmpl": TemplateConverter,
 }
