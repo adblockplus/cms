@@ -22,7 +22,6 @@ def process_page(source, locale, page, format, site_url_override=None):
     "source": source,
     "template": "default",
     "locale": locale,
-    "title": "title",
     "page": page,
     "pagedata": source.read_page(page, format),
     "config": source.read_config(),
@@ -49,12 +48,18 @@ def process_page(source, locale, page, format, site_url_override=None):
   params["templatedata"] = source.read_template(params["template"])
   template_converter = TemplateConverter(params, key="templatedata")
 
-  params["available_locales"] = sorted(
-    filter(
-      lambda locale: source.has_locale(locale, localefile),
-      source.list_locales()
-    )
-  )
+  defaultlocale = params["config"].get("general", "defaultlocale")
+  params["defaultlocale"] = defaultlocale
+
+  locales = [
+    locale
+    for locale in source.list_locales()
+    if source.has_locale(locale, localefile)
+  ]
+  if defaultlocale not in locales:
+    locales.append(defaultlocale)
+  locales.sort()
+  params["available_locales"] = locales
 
   params["head"], params["body"] = converter()
   return template_converter()

@@ -15,7 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, imp, re, jinja2, markdown
+import os
+import HTMLParser
+import imp
+import re
+
+import jinja2
+import markdown
+
 
 # Monkey-patch Markdown's isBlockLevel function to ensure that no paragraphs are
 # inserted into the <head> tag
@@ -35,10 +42,54 @@ html_escapes = {
   "'": "&#39;",
 }
 
+class AttributeParser(HTMLParser.HTMLParser):
+  _string = None
+  _attrs = None
+
+  def __init__(self, whitelist):
+    self._whitelist = whitelist
+
+  def parse(self, text, pagename):
+    self.reset()
+    self._string = []
+    self._attrs = {}
+    self._pagename = pagename
+
+    try:
+      self.feed(text)
+      return "".join(self._string), self._attrs
+    finally:
+      self._string = None
+      self._attrs = None
+      self._pagename = None
+
+  def handle_starttag(self, tag, attrs):
+    if tag not in self._whitelist:
+      raise Exception("Unexpected HTML tag '%s' in localizable string on page %s" % (tag, self._pagename))
+    self._attrs.setdefault(tag, []).append(attrs)
+    self._string.append("<%s>" % tag)
+
+  def handle_endtag(self, tag):
+    self._string.append("</%s>" % tag)
+
+  def handle_data(self, data):
+    # Note: lack of escaping here is intentional. The result is a locale string,
+    # HTML escaping is applied when this string is inserted into the document.
+    self._string.append(data)
+
+  def handle_entityref(self, name):
+    self._string.append(self.unescape("&%s;" % name))
+
+  def handle_charref(self, name):
+    self._string.append(self.unescape("&#%s;" % name))
+
 class Converter:
+  whitelist = set(["a", "em", "strong"])
+
   def __init__(self, params, key="pagedata"):
     self._params = params
     self._key = key
+    self._attribute_parser = AttributeParser(self.whitelist)
 
     # Read in any parameters specified at the beginning of the file
     lines = params[key].splitlines(True)
@@ -47,7 +98,7 @@ class Converter:
       params[name.strip()] = value.strip()
     params[key] = "".join(lines)
 
-  def localize_string(self, name, localedata, escapes, links=[]):
+  def localize_string(self, name, default, localedata, escapes):
     def escape(s):
       return re.sub(r".",
         lambda match: escapes.get(match.group(0), match.group(0)),
@@ -55,46 +106,47 @@ class Converter:
     def re_escape(s):
       return re.escape(escape(s))
 
-    try:
+    # Extract tag attributes from default string
+    default, saved_attributes = self._attribute_parser.parse(default, self._params["page"])
+
+    # Get translation
+    if self._params["locale"] != self._params["defaultlocale"] and name in localedata:
       result = localedata[name].strip()
-    except KeyError:
-      raise Exception("Lookup failed for string %s used on page %s" % (name, self._params["page"]))
+    else:
+      result = default
 
-    # Insert links
+    # Insert attributes
     result = escape(result)
-    while links:
+    for tag in self.whitelist:
+      saved = saved_attributes.get(tag, [])
+      for attrs in saved:
+        attrs = map(lambda (name, value): '%s="%s"' % (escape(name), escape(value)), attrs)
+        result = re.sub(
+          r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
+          r'<%s %s>\1</%s>' % (tag, " ".join(attrs), tag),
+          result, 1, flags=re.S
+        )
       result = re.sub(
-        r"%s([^<>]*?)%s" % (re_escape("<a>"), re_escape("</a>")),
-        r'<a href="%s">\1</a>' % links.pop(0),
-        result, 1, flags=re.S
+        r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
+        r"<%s>\1</%s>" % (tag, tag),
+        result, flags=re.S
       )
-
-    # <strong> and <em> tags are allowed
-    result = re.sub(
-      r"%s([^<>]*?)%s" % (re_escape("<strong>"), re_escape("</strong>")),
-      r"<strong>\1</strong>",
-      result, flags=re.S
-    )
-    result = re.sub(
-      r"%s([^<>]*?)%s" % (re_escape("<em>"), re_escape("</em>")),
-      r"<em>\1</em>",
-      result, flags=re.S
-    )
     return result
 
-  def insert_localized_strings(self, text, escapes):
+  def insert_localized_strings(self, text, escapes, to_html=lambda s: s):
     def lookup_string(match):
-      name, links = match.groups()
-      if links:
-        links = map(unicode.strip, links.strip("()").split(","))
-      else:
-        links = []
-      return self.localize_string(name, self._params["localedata"], escapes, links)
+      name, comment, default = match.groups()
+      default = to_html(default).strip()
+
+      # Note: We currently ignore the comment, it is only relevant when
+      # generating the master translation.
+      return self.localize_string(name, default, self._params["localedata"], escapes)
 
     return re.sub(
-      r"\$([\w\-]+)(\([^()$]+\))?\$",
+      r"\{\{\s*([\w\-]+)(?:\[(.*?)\])?\s+(.*?)\}\}",
       lookup_string,
-      text
+      text,
+      flags=re.S
     )
 
   def process_links(self, text):
@@ -126,7 +178,7 @@ class Converter:
           self._params["includedata"] = self._params["source"].read_include(name, format)
           converter = converter_class(self._params, key="includedata")
           return converter()
-      raise Exception("Failed to resolve include %s in page %s" % (name, self._params["page"]))
+      raise Exception("Failed to resolve include %s on page %s" % (name, self._params["page"]))
 
     return re.sub(
       r'%s\?\s*include\s+([^\s<>"]+)\s*\?%s' % (
@@ -183,7 +235,10 @@ class MarkdownConverter(Converter):
     md = markdown.Markdown(output="html5", extensions=["attr_list"])
     md.preprocessors["html_block"].markdown_in_raw = True
 
-    result = self.insert_localized_strings(source, escapes)
+    def to_html(s):
+      return re.sub(r'</?p>', '', md.convert(s))
+
+    result = self.insert_localized_strings(source, escapes, to_html)
     result = md.convert(result)
     result = re.sub(r"&#(\d+);", remove_unnecessary_entities, result)
     result = self.process_links(result)
@@ -209,6 +264,10 @@ class TemplateConverter(Converter):
       "toclist": self.toclist,
     }
 
+    globals = {
+      "get_string": self.get_string,
+    }
+
     for filename in self._params["source"].list_files("filters"):
       root, ext = os.path.splitext(filename)
       if ext.lower() != ".py":
@@ -227,20 +286,25 @@ class TemplateConverter(Converter):
 
     self._env = jinja2.Environment(loader=self._SourceLoader(self._params["source"]), autoescape=True)
     self._env.filters.update(filters)
+    self._env.globals.update(globals)
 
   def get_html(self, source):
     template = self._env.from_string(source)
     return template.render(self._params)
 
-  def translate(self, name, page=None, links=[]):
-    if page == None:
-      localedata = self._params["localedata"]
-    else:
-      localedata = self._params["source"].read_locale(self._params["locale"], page)
-    return jinja2.Markup(self.localize_string(name, localedata, html_escapes, links=links))
+  def translate(self, default, name, comment=None):
+    # Note: We currently ignore the comment, it is only relevant when
+    # generating the master translation.
+    localedata = self._params["localedata"]
+    return jinja2.Markup(self.localize_string(name, default, localedata, html_escapes))
+
+  def get_string(self, name, page):
+    localedata = self._params["source"].read_locale(self._params["locale"], page)
+    default = localedata[name]
+    return jinja2.Markup(self.localize_string(name, default, localedata, html_escapes))
 
   def linkify(self, page, locale=None, **attrs):
-    if locale == None:
+    if locale is None:
       locale = self._params["locale"]
 
     locale, url = self._params["source"].resolve_link(page, locale)

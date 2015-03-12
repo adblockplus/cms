@@ -62,10 +62,12 @@ def generate_pages(repo, output_dir):
     source.read_locale = memoize(source.read_locale)
     source.read_include = memoize(source.read_include)
 
+    config = source.read_config()
+    defaultlocale = config.get("general", "defaultlocale")
     locales = list(source.list_locales())
     for page, format in source.list_pages():
       for locale in locales:
-        if source.has_locale(locale, page):
+        if locale == defaultlocale or source.has_locale(locale, page):
           pagedata = process_page(source, locale, page, format)
 
           # Make sure links to static files are versioned
