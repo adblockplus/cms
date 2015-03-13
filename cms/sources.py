@@ -152,7 +152,7 @@ class Source:
     if locale == default_locale:
       result = {}
     else:
-      result = self.read_locale(default_locale, page)
+      result = dict(self.read_locale(default_locale, page))
 
     if self.has_locale(locale, page):
       filedata = self.read_file(self.locale_filename(locale, page))
