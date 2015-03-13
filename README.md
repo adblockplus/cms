@@ -180,7 +180,7 @@ Other pages should be linked by using their name as link target (relative links)
 these links will be resolved to point to the most appropriate page language.
 Embedding localizable images works the same, use the image name as image source.
 
-#### Raw HTML format (raw) ####
+#### Raw HTML format (html) ####
 
 This format is similar to the Markdown format but uses regular HTML syntax.
 No processing is performed beyond inserting localized strings and resolving
