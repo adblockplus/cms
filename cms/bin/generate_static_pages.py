@@ -65,6 +65,8 @@ def generate_pages(repo, output_dir):
     config = source.read_config()
     defaultlocale = config.get("general", "defaultlocale")
     locales = list(source.list_locales())
+    if defaultlocale not in locales:
+      locales.append(defaultlocale)
     for page, format in source.list_pages():
       for locale in locales:
         if locale == defaultlocale or source.has_locale(locale, page):
