@@ -42,13 +42,17 @@ def get_data(path):
   path = path.rstrip("/")
   if path == "":
     path = source.read_config().get("general", "defaultlocale")
-  if "/" not in path:
-    path = "%s/%s" % (path, source.read_config().get("general", "defaultpage"))
+  if "/" in path:
+    locale, page = path.split("/", 1)
+  else:
+    locale, page = path, ""
 
-  locale, page = path.split("/", 1)
+  default_page = source.read_config().get("general", "defaultpage")
+  alternative_page = "/".join([page, default_page]).lstrip("/")
   for format in converters.iterkeys():
-    if source.has_page(page, format):
-      return process_page(source, locale, page, format, "http://127.0.0.1:5000").encode("utf-8")
+    for p in (page, alternative_page):
+      if source.has_page(p, format):
+        return process_page(source, locale, p, format, "http://127.0.0.1:5000").encode("utf-8")
   if source.has_localizable_file(locale, page):
     return source.read_localizable_file(locale, page)
 

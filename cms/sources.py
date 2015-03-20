@@ -15,9 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os, subprocess, zipfile, json, urlparse, codecs
+import codecs
+import ConfigParser
+import json
+import os
 from StringIO import StringIO
-from ConfigParser import SafeConfigParser
+import subprocess
+import sys
+import urlparse
+import zipfile
 
 class Source:
   def resolve_link(self, url, locale):
@@ -27,36 +33,44 @@ class Source:
       # Not a page link
       return None, None
 
-    if parsed.path == "" and url != "":
+    if page == "" and url != "":
       # Page-relative link
       return None, None
+
+    def has_locale(locale, page):
+      try:
+        page = config.get("locale_overrides", page)
+      except ConfigParser.Error:
+        pass
+      return self.has_locale(locale, page)
 
     config = self.read_config()
     default_locale = config.get("general", "defaultlocale")
     default_page = config.get("general", "defaultpage")
+    alternative_page = "/".join([page, default_page]).lstrip("/")
 
-    checked_page = page
-    if config.has_option("locale_overrides", page):
-      checked_page = config.get("locale_overrides", page)
-
-    if self.has_localizable_file(default_locale, checked_page):
-      if not self.has_localizable_file(locale, checked_page):
+    if self.has_localizable_file(default_locale, page):
+      if not self.has_localizable_file(locale, page):
         locale = default_locale
-    elif self.has_page(checked_page):
-      if not self.has_locale(locale, checked_page):
+    elif self.has_page(page):
+      if not has_locale(locale, page):
+        locale = default_locale
+    elif self.has_page(alternative_page):
+      if not has_locale(locale, alternative_page):
         locale = default_locale
     else:
       print >>sys.stderr, "Warning: Link to %s cannot be resolved" % page
 
-    if page == default_page:
-      page = ""
+    parts = page.split("/")
+    if parts[-1] == default_page:
+      page = "/".join(parts[:-1])
 
     path = "/%s/%s" % (locale, page)
     return locale, urlparse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
 
   def read_config(self):
     configdata = self.read_file("settings.ini")
-    config = SafeConfigParser()
+    config = ConfigParser.SafeConfigParser()
     config.readfp(StringIO(configdata))
     return config
 
