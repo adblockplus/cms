@@ -290,7 +290,11 @@ class TemplateConverter(Converter):
 
   def get_html(self, source):
     template = self._env.from_string(source)
-    return template.render(self._params)
+    module = template.make_module(self._params)
+    for key, value in module.__dict__.iteritems():
+      if not key.startswith("_"):
+        self._params[key] = value
+    return unicode(module)
 
   def translate(self, default, name, comment=None):
     # Note: We currently ignore the comment, it is only relevant when
