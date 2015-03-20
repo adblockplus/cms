@@ -76,6 +76,7 @@ Currently, the following directories of your content directory will be
 considered:
 
 * `filters`: Custom Jinja2 filters
+* `globals`: Custom Jinja2 global functions and variables
 * `includes`: Various include files
 * `locales`: Localization files
 * `pages`: User-visible pages
@@ -237,7 +238,15 @@ defined, the pages need to choose them explicitly using the `template` setting.
 
 The `filters` directory can define custom Jinja2 filters which will be available
 in all Jinja2 templates. The file name defines the filter name, e.g.
-`myfilter.py` will define a filter named `myfilter`. This file should also
-contain a function called `myfilter`, this one will be called when the filter is
-invoked. For more information on Jinja2 filters see
+`filters/myfilter.py` will define a filter named `myfilter`. This file should
+also contain a function called `myfilter`, this one will be called when the
+filter is invoked. For more information on Jinja2 filters see
 [official documentation](http://jinja.pocoo.org/docs/dev/api/#writing-filters).
+
+### Custom functions and variables ###
+
+The `globals` directory can define custom Jinja2 globals which will be available
+in all Jinja2 templates. Typically, this is used for custom functions. The file
+name should match the name of the function or variable to be defined, and export
+a variable with that name. E.g. `globals/myfunction.py` can define a function
+called `myfunction` that will become available to all Jinja2 templates.
