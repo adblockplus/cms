@@ -4,7 +4,18 @@ a = Analysis(
   ['runserver.py'],
   pathex=['.'],
   hiddenimports=[],
-  excludes=['sqlite3', 'django', 'ssl', '_ssl', 'OpenSSL', '_hashlib', 'unittest'],
+  excludes=[
+    'distutils',
+    'doctest',
+    'ssl',
+    '_ssl',
+    'werkzeug',
+
+    # Mac-specific
+    'Carbon',
+    'Finder',
+    'StdSuites',
+  ],
 )
 
 pyz = PYZ(a.pure)
