@@ -15,31 +15,46 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os, flask
+import mimetypes
+import os
+import sys
+
+import jinja2
+
 from ..utils import process_page
 from ..sources import FileSource
 from ..converters import converters
 
-app = flask.Flask("cms.bin.test_server")
 source = None
 
-mime_types = {
-  "": "text/html; charset=utf-8",
-  ".htm": "text/html; charset=utf-8",
-  ".html": "text/html; charset=utf-8",
-  ".js": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".xml": "text/xml; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-}
+UNICODE_ENCODING = "utf-8"
+
+ERROR_TEMPLATE = """
+<html>
+  <head>
+    <title>{{status}}</title>
+  </head>
+  <body>
+    <h1>{{status}}</h1>
+    {% set code = status.split()|first|int %}
+    {% if code == 404 %}
+      <p>No page found for the address {{uri}}.</p>
+    {% elif code == 500 %}
+      <p>An error occurred while processing the request for {{uri}}:</p>
+      <pre>{{error}}</pre>
+    {% endif %}
+  </body>
+</html>"""
+
+# Create our own instance, the default one will introduce "random" host-specific
+# behavior by parsing local config files.
+mime_types = mimetypes.MimeTypes()
 
 def get_data(path):
   if source.has_static(path):
     return source.read_static(path)
 
-  path = path.rstrip("/")
+  path = path.strip("/")
   if path == "":
     path = source.read_config().get("general", "defaultlocale")
   if "/" in path:
@@ -52,22 +67,35 @@ def get_data(path):
   for format in converters.iterkeys():
     for p in (page, alternative_page):
       if source.has_page(p, format):
-        return process_page(source, locale, p, format, "http://127.0.0.1:5000").encode("utf-8")
+        return process_page(source, locale, p, format, "http://127.0.0.1:5000")
   if source.has_localizable_file(locale, page):
     return source.read_localizable_file(locale, page)
 
   return None
 
-@app.route("/", methods = ["GET"])
-@app.route("/<path:path>", methods = ["GET"])
-def show(path=""):
+def show_error(start_response, status, **kwargs):
+  env = jinja2.Environment(autoescape=True)
+  template = env.from_string(ERROR_TEMPLATE)
+  mime = "text/html; encoding=%s" % UNICODE_ENCODING
+  start_response(status, [("Content-Type", mime)])
+  for fragment in template.stream(status=status, **kwargs):
+    yield fragment.encode(UNICODE_ENCODING)
+
+def handler(environ, start_response):
+  path = environ.get("PATH_INFO")
+
   data = get_data(path)
   if data == None:
-    flask.abort(404)
+    return show_error(start_response, "404 Not Found", uri=path)
 
-  root, ext = os.path.splitext(path)
-  mime = mime_types.get(ext.lower(), "application/octet-stream")
-  return data, 200, {"Content-Type": mime}
+  mime = mime_types.guess_type(path)[0] or "text/html"
+
+  if isinstance(data, unicode):
+    data = data.encode(UNICODE_ENCODING)
+    mime = "%s; charset=%s" % (mime, UNICODE_ENCODING)
+
+  start_response("200 OK", [("Content-Type", mime)])
+  return [data]
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
@@ -76,4 +104,20 @@ if __name__ == "__main__":
 
   source = FileSource(sys.argv[1])
 
-  app.run(debug=True)
+  try:
+    from werkzeug.serving import run_simple
+  except ImportError:
+    from wsgiref.simple_server import make_server
+    def run_simple(host, port, app, **kwargs):
+      def wrapper(environ, start_response):
+        try:
+          return app(environ, start_response)
+        except Exception, e:
+          return show_error(start_response, "500 Internal Server Error",
+              uri=environ.get("PATH_INFO"), error=e)
+
+      server = make_server(host, port, wrapper)
+      print " * Running on http://%s:%i/" % server.server_address
+      server.serve_forever()
+
+  run_simple("localhost", 5000, handler, use_reloader=True, use_debugger=True)
