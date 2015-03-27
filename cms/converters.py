@@ -44,6 +44,8 @@ html_escapes = {
 
 class AttributeParser(HTMLParser.HTMLParser):
   _string = None
+  _inside_fixed = False
+  _fixed_strings = None
   _attrs = None
 
   def __init__(self, whitelist):
@@ -52,36 +54,56 @@ class AttributeParser(HTMLParser.HTMLParser):
   def parse(self, text, pagename):
     self.reset()
     self._string = []
+    self._fixed_strings = []
+    self._inside_fixed = False
     self._attrs = {}
     self._pagename = pagename
 
     try:
       self.feed(text)
-      return "".join(self._string), self._attrs
+      return "".join(self._string), self._attrs, ["".join(s) for s in self._fixed_strings]
     finally:
       self._string = None
       self._attrs = None
       self._pagename = None
+      self._inside_fixed = False
+      self._fixed_strings = None
 
   def handle_starttag(self, tag, attrs):
-    if tag not in self._whitelist:
+    if self._inside_fixed:
+      raise Exception("Unexpected HTML tag '%s' inside a fixed string on page %s" % (tag, self._pagename))
+    elif tag == "fix":
+      self._inside_fixed = True
+      self._fixed_strings.append([])
+    elif tag in self._whitelist:
+      self._attrs.setdefault(tag, []).append(attrs)
+      self._string.append("<%s>" % tag)
+    else:
       raise Exception("Unexpected HTML tag '%s' in localizable string on page %s" % (tag, self._pagename))
-    self._attrs.setdefault(tag, []).append(attrs)
-    self._string.append("<%s>" % tag)
 
   def handle_endtag(self, tag):
-    self._string.append("</%s>" % tag)
+    if tag == "fix":
+      self._string.append("{%d}" % len(self._fixed_strings))
+      self._inside_fixed = False
+    else:
+      self._string.append("</%s>" % tag)
+
+  def _append_text(self, s):
+    if self._inside_fixed:
+      self._fixed_strings[-1].append(s)
+    else:
+      self._string.append(s)
 
   def handle_data(self, data):
     # Note: lack of escaping here is intentional. The result is a locale string,
     # HTML escaping is applied when this string is inserted into the document.
-    self._string.append(data)
+    self._append_text(data)
 
   def handle_entityref(self, name):
-    self._string.append(self.unescape("&%s;" % name))
+    self._append_text(self.unescape("&%s;" % name))
 
   def handle_charref(self, name):
-    self._string.append(self.unescape("&#%s;" % name))
+    self._append_text(self.unescape("&#%s;" % name))
 
 class Converter:
   whitelist = set(["a", "em", "strong"])
@@ -107,13 +129,17 @@ class Converter:
       return re.escape(escape(s))
 
     # Extract tag attributes from default string
-    default, saved_attributes = self._attribute_parser.parse(default, self._params["page"])
+    default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params["page"])
 
     # Get translation
     if self._params["locale"] != self._params["defaultlocale"] and name in localedata:
       result = localedata[name].strip()
     else:
       result = default
+
+    # Insert fixed strings
+    for i in range(len(fixed_strings)):
+      result = re.sub(r"\{%d\}" % (i + 1), fixed_strings[i], result, 1)
 
     # Insert attributes
     result = escape(result)
