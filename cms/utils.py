@@ -17,7 +17,15 @@
 
 from .converters import converters, TemplateConverter
 
-def process_page(source, locale, page, format, site_url_override=None):
+def get_page_params(source, locale, page, format=None, site_url_override=None):
+  # Guess page format if omitted, but default to Markdown for friendlier exceptions
+  if format is None:
+    for format in converters.iterkeys():
+      if source.has_page(page, format):
+        break
+    else:
+      format = "md"
+
   params = {
     "source": source,
     "template": "default",
@@ -46,7 +54,6 @@ def process_page(source, locale, page, format, site_url_override=None):
   # Note: The converter might change some parameters so we can only read in
   # template data here.
   params["templatedata"] = source.read_template(params["template"])
-  template_converter = TemplateConverter(params, key="templatedata")
 
   defaultlocale = params["config"].get("general", "defaultlocale")
   params["defaultlocale"] = defaultlocale
@@ -62,4 +69,10 @@ def process_page(source, locale, page, format, site_url_override=None):
   params["available_locales"] = locales
 
   params["head"], params["body"] = converter()
-  return template_converter()
+  return params
+
+def process_page(source, locale, page, format, site_url_override=None):
+  return TemplateConverter(
+    get_page_params(source, locale, page, format, site_url_override),
+    key="templatedata"
+  )()

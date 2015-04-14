@@ -292,6 +292,7 @@ class TemplateConverter(Converter):
 
     globals = {
       "get_string": self.get_string,
+      "get_page_content": self.get_page_content,
     }
 
     for dirname, dictionary in [("filters", filters), ("globals", globals)]:
@@ -341,6 +342,13 @@ class TemplateConverter(Converter):
     localedata = self._params["source"].read_locale(self._params["locale"], page)
     default = localedata[name]
     return jinja2.Markup(self.localize_string(name, default, localedata, html_escapes))
+
+  def get_page_content(self, page, locale=None):
+    from cms.utils import get_page_params
+
+    if locale is None:
+      locale = self._params["locale"]
+    return get_page_params(self._params["source"], locale, page)
 
   def linkify(self, page, locale=None, **attrs):
     if locale is None:
