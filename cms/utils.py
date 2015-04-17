@@ -59,8 +59,8 @@ def get_page_params(source, locale, page, format=None, site_url_override=None):
   params["defaultlocale"] = defaultlocale
 
   locales = [
-    locale
-    for locale in source.list_locales()
+    l
+    for l in source.list_locales()
     if source.has_locale(locale, localefile)
   ]
   if defaultlocale not in locales:
@@ -69,9 +69,15 @@ def get_page_params(source, locale, page, format=None, site_url_override=None):
   params["available_locales"] = locales
 
   params["head"], params["body"] = converter()
+  if converter.total_translations > 0:
+    params["translation_ratio"] = (1 -
+        float(converter.missing_translations) / converter.total_translations)
+  else:
+    params["translation_ratio"] = 1
+
   return params
 
-def process_page(source, locale, page, format, site_url_override=None):
+def process_page(source, locale, page, format=None, site_url_override=None):
   return TemplateConverter(
     get_page_params(source, locale, page, format, site_url_override),
     key="templatedata"

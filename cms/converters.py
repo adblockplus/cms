@@ -111,6 +111,8 @@ class AttributeParser(HTMLParser.HTMLParser):
 
 class Converter:
   whitelist = {"a", "em", "strong", "code", "span"}
+  missing_translations = 0
+  total_translations = 0
 
   def __init__(self, params, key="pagedata"):
     self._params = params
@@ -136,10 +138,15 @@ class Converter:
     default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params["page"])
 
     # Get translation
-    if self._params["locale"] != self._params["defaultlocale"] and name in localedata:
+    locale = self._params["locale"]
+    if locale == self._params["defaultlocale"]:
+      result = default
+    elif name in localedata:
       result = localedata[name].strip()
     else:
       result = default
+      self.missing_translations += 1
+    self.total_translations += 1
 
     # Insert fixed strings
     for i, fixed_string in enumerate(fixed_strings, 1):
@@ -220,7 +227,10 @@ class Converter:
         if self._params["source"].has_include(name, format):
           self._params["includedata"] = self._params["source"].read_include(name, format)
           converter = converter_class(self._params, key="includedata")
-          return converter()
+          result = converter()
+          self.missing_translations += converter.missing_translations
+          self.total_translations += converter.total_translations
+          return result
       raise Exception("Failed to resolve include %s on page %s" % (name, self._params["page"]))
 
     return re.sub(

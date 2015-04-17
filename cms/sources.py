@@ -37,13 +37,6 @@ class Source:
       # Page-relative link
       return None, None
 
-    def has_locale(locale, page):
-      try:
-        page = config.get("locale_overrides", page)
-      except ConfigParser.Error:
-        pass
-      return self.has_locale(locale, page)
-
     config = self.read_config()
     default_locale = config.get("general", "defaultlocale")
     default_page = config.get("general", "defaultpage")
@@ -53,10 +46,10 @@ class Source:
       if not self.has_localizable_file(locale, page):
         locale = default_locale
     elif self.has_page(page):
-      if not has_locale(locale, page):
+      if not self.has_locale(locale, page):
         locale = default_locale
     elif self.has_page(alternative_page):
-      if not has_locale(locale, alternative_page):
+      if not self.has_locale(locale, alternative_page):
         locale = default_locale
     else:
       logging.warning("Link to %s cannot be resolved", page)
@@ -157,8 +150,10 @@ class Source:
 
   def has_locale(self, locale, page):
     config = self.read_config()
-    if config.has_option("locale_overrides", page):
+    try:
       page = config.get("locale_overrides", page)
+    except ConfigParser.Error:
+      pass
     return self.has_file(self.locale_filename(locale, page))
 
   def read_locale(self, locale, page):
