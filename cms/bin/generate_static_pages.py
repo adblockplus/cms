@@ -20,10 +20,13 @@ import os
 import re
 import errno
 import codecs
+import ConfigParser
 import logging
 
-from cms.utils import process_page
+from cms.utils import get_page_params, process_page
 from cms.sources import MercurialSource
+
+MIN_TRANSLATED = 0.3
 
 def memoize(func):
   memoized = {}
@@ -32,6 +35,7 @@ def memoize(func):
       return memoized[args]
     except KeyError:
       return memoized.setdefault(args, func(*args))
+  wrapper.clear_cache = memoized.clear
   return wrapper
 
 def generate_pages(repo, output_dir):
@@ -73,17 +77,44 @@ def generate_pages(repo, output_dir):
     locales = list(source.list_locales())
     if defaultlocale not in locales:
       locales.append(defaultlocale)
+
+    # First pass: compile the list of pages with given translation level
+    pagelist = set()
+    blacklist = set()
     for page, format in source.list_pages():
       for locale in locales:
-        if locale == defaultlocale or source.has_locale(locale, page):
-          pagedata = process_page(source, locale, page, format)
+        if locale == defaultlocale:
+          pagelist.add((locale, page))
+        elif source.has_locale(locale, page):
+          params = get_page_params(source, locale, page, format)
+          if params["translation_ratio"] >= MIN_TRANSLATED:
+            pagelist.add((locale, page))
+          else:
+            blacklist.add((locale, page))
 
-          # Make sure links to static files are versioned
-          pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
-          pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
-          pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
+    # Override existance check to avoid linking to pages we don't generate
+    orig_has_locale = source.has_locale
+    def has_locale(locale, page):
+      try:
+        page = config.get("locale_overrides", page)
+      except ConfigParser.Error:
+        pass
+      if (locale, page) in blacklist:
+        return False
+      return orig_has_locale(locale, page)
+    source.has_locale = has_locale
+    source.resolve_link.clear_cache()
 
-          write_file([locale] + page.split("/"), pagedata)
+    # Second pass: actually generate pages this time
+    for locale, page in pagelist:
+      pagedata = process_page(source, locale, page)
+
+      # Make sure links to static files are versioned
+      pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
+      pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
+      pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
+
+      write_file([locale] + page.split("/"), pagedata)
 
     for filename in source.list_localizable_files():
       for locale in locales:
