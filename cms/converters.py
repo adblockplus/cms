@@ -157,7 +157,7 @@ class Converter:
         attrs = map(stringify_attribute, attrs)
         result = re.sub(
           r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
-          r'<%s %s>\1</%s>' % (tag, " ".join(attrs), tag),
+          r'<%s%s>\1</%s>' % (tag, " " + " ".join(attrs) if attrs else "", tag),
           result, 1, flags=re.S
         )
       result = re.sub(
