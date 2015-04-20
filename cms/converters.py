@@ -132,8 +132,7 @@ class Converter:
     default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params["page"])
 
     # Get translation
-    locale = self._params["locale"]
-    if locale != self._params["defaultlocale"] and name in localedata:
+    if self._params["locale"] != self._params["defaultlocale"] and name in localedata:
       result = localedata[name].strip()
     else:
       result = default
@@ -144,17 +143,10 @@ class Converter:
 
     # Insert attributes
     result = escape(result)
-    def stringify_attribute((name, value)):
-      if name == "href":
-        link_locale, link = self._params["source"].resolve_link(value, locale)
-        if link:
-          return 'href="%s" hreflang="%s"' % (escape(link), escape(link_locale))
-      return '%s="%s"' % (escape(name), escape(value))
-
     for tag in self.whitelist:
       saved = saved_attributes.get(tag, [])
       for attrs in saved:
-        attrs = map(stringify_attribute, attrs)
+        attrs = map(lambda (name, value): '%s="%s"' % (escape(name), escape(value)), attrs)
         result = re.sub(
           r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
           r'<%s%s>\1</%s>' % (tag, " " + " ".join(attrs) if attrs else "", tag),
