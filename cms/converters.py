@@ -330,7 +330,10 @@ class TemplateConverter(Converter):
     for key, value in module.__dict__.iteritems():
       if not key.startswith("_"):
         self._params[key] = value
-    return unicode(module)
+
+    result = unicode(module)
+    result = self.process_links(result)
+    return result
 
   def translate(self, default, name, comment=None):
     # Note: We currently ignore the comment, it is only relevant when
