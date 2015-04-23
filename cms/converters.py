@@ -143,10 +143,16 @@ class Converter:
 
     # Insert attributes
     result = escape(result)
+    def stringify_attribute((name, value)):
+      return '%s="%s"' % (
+        escape(name),
+        escape(self.insert_localized_strings(value, escapes))
+      )
+
     for tag in self.whitelist:
       saved = saved_attributes.get(tag, [])
       for attrs in saved:
-        attrs = map(lambda (name, value): '%s="%s"' % (escape(name), escape(value)), attrs)
+        attrs = map(stringify_attribute, attrs)
         result = re.sub(
           r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
           r'<%s%s>\1</%s>' % (tag, " " + " ".join(attrs) if attrs else "", tag),
@@ -169,7 +175,14 @@ class Converter:
       return self.localize_string(name, default, self._params["localedata"], escapes)
 
     return re.sub(
-      r"\{\{\s*([\w\-]+)(?:\[(.*?)\])?\s+(.*?)\}\}",
+      r"{{\s*"
+      r"([\w\-]+)" # String ID
+      r"(?:\[(.*?)\])?" # Optional comment
+      r"\s+"
+      r"((?:(?!{{).|" # Translatable text
+        r"{{(?:(?!}}).)*}}" # Nested translation
+      r")*?)"
+      r"}}",
       lookup_string,
       text,
       flags=re.S
