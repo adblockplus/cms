@@ -211,6 +211,8 @@ class MercurialSource(Source):
     command = ["hg", "-R", repo, "id", "-n", "-r", "default"]
     self.version = subprocess.check_output(command).strip()
 
+    self._name = os.path.basename(repo.rstrip(os.path.sep))
+
   def __enter__(self):
     return self
 
@@ -239,6 +241,10 @@ class MercurialSource(Source):
     for filename in self._archive.namelist():
       if filename.startswith(prefix):
         yield filename[len(prefix):]
+
+  if os.name == "posix":
+    def get_cache_dir(self):
+      return "/var/cache/" + self._name
 
 class FileSource(Source):
   def __init__(self, dir):
@@ -280,3 +286,6 @@ class FileSource(Source):
           do_list(path, relpath + filename + "/")
     do_list(self.get_path(subdir), "")
     return result
+
+  def get_cache_dir(self):
+    return os.path.join(self._dir, "cache")
