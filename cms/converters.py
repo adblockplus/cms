@@ -59,6 +59,10 @@ class AttributeParser(HTMLParser.HTMLParser):
     self._attrs = {}
     self._pagename = pagename
 
+    # Force-escape ampersands, otherwise the parser will autocomplete bogus
+    # entities.
+    text = re.sub(r"&(?!\S+;)", "&amp;", text)
+
     try:
       self.feed(text)
       return "".join(self._string), self._attrs, ["".join(s) for s in self._fixed_strings]
