@@ -110,7 +110,7 @@ class AttributeParser(HTMLParser.HTMLParser):
     self._append_text(self.unescape("&#%s;" % name))
 
 class Converter:
-  whitelist = set(["a", "em", "strong", "code"])
+  whitelist = {"a", "em", "strong", "code", "span"}
 
   def __init__(self, params, key="pagedata"):
     self._params = params
