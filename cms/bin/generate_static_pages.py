@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os, re, errno, codecs
+import sys, os, re, errno, codecs, logging
 from ..utils import process_page
 from ..sources import MercurialSource
 
@@ -35,7 +35,7 @@ def generate_pages(repo, output_dir):
     encoding = None if binary else "utf-8"
     outfile = os.path.join(output_dir, *path_parts)
     if outfile in known_files:
-      print >>sys.stderr, "Warning: File %s has multiple sources" % outfile
+      logging.warning("File %s has multiple sources", outfile)
       return
     known_files.add(outfile)
 

@@ -21,9 +21,9 @@ import json
 import os
 from StringIO import StringIO
 import subprocess
-import sys
 import urlparse
 import zipfile
+import logging
 
 class Source:
   def resolve_link(self, url, locale):
@@ -59,7 +59,7 @@ class Source:
       if not has_locale(locale, alternative_page):
         locale = default_locale
     else:
-      print >>sys.stderr, "Warning: Link to %s cannot be resolved" % page
+      logging.warning("Link to %s cannot be resolved", page)
 
     parts = page.split("/")
     if parts[-1] == default_page:
