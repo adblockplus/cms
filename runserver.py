@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # This is a stub script loading test_server module, used by PyInstaller.
 
-import runpy, sys, os
+import runpy
+import sys
+import os
 
 # Make sure hidden imports are found
 import cms.bin.test_server

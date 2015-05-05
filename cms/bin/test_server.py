@@ -21,9 +21,9 @@ import sys
 
 import jinja2
 
-from ..utils import process_page
-from ..sources import FileSource
-from ..converters import converters
+from cms.utils import process_page
+from cms.sources import FileSource
+from cms.converters import converters
 
 source = None
 

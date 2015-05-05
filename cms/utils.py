@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from .converters import converters, TemplateConverter
+from cms.converters import converters, TemplateConverter
 
 def get_page_params(source, locale, page, format=None, site_url_override=None):
   # Guess page format if omitted, but default to Markdown for friendlier exceptions
