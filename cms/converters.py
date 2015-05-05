@@ -150,7 +150,7 @@ class Converter:
     def stringify_attribute((name, value)):
       return '%s="%s"' % (
         escape(name),
-        escape(self.insert_localized_strings(value, escapes))
+        escape(self.insert_localized_strings(value, {}))
       )
 
     for tag in self.whitelist:
