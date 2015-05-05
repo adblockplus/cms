@@ -106,9 +106,20 @@ if __name__ == "__main__":
 
   try:
     from werkzeug.serving import run_simple
+    def run(*args, **kwargs):
+      # The werkzeug logger must be configured before the
+      # root logger. Also we must prevent it from propagating
+      # messages, otherwise messages are logged twice.
+      import logging
+      logger = logging.getLogger("werkzeug")
+      logger.propagate = False
+      logger.setLevel(logging.INFO)
+      logger.addHandler(logging.StreamHandler())
+
+      run_simple(*args, **kwargs)
   except ImportError:
     from wsgiref.simple_server import make_server
-    def run_simple(host, port, app, **kwargs):
+    def run(host, port, app, **kwargs):
       def wrapper(environ, start_response):
         try:
           return app(environ, start_response)
@@ -120,4 +131,4 @@ if __name__ == "__main__":
       print " * Running on http://%s:%i/" % server.server_address
       server.serve_forever()
 
-  run_simple("localhost", 5000, handler, use_reloader=True, use_debugger=True)
+  run("localhost", 5000, handler, use_reloader=True, use_debugger=True)
