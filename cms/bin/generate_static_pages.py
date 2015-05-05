@@ -15,9 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os, re, errno, codecs, logging
-from ..utils import process_page
-from ..sources import MercurialSource
+import sys
+import os
+import re
+import errno
+import codecs
+import logging
+
+from cms.utils import process_page
+from cms.sources import MercurialSource
 
 def memoize(func):
   memoized = {}

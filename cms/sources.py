@@ -90,7 +90,7 @@ class Source:
 
   def has_page(self, page, format=None):
     if format is None:
-      from .converters import converters
+      from cms.converters import converters
       return any(
         self.has_page(page, format)
         for format in converters.iterkeys()
