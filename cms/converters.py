@@ -142,8 +142,8 @@ class Converter:
       result = default
 
     # Insert fixed strings
-    for i in range(len(fixed_strings)):
-      result = re.sub(r"\{%d\}" % (i + 1), fixed_strings[i], result, 1)
+    for i, fixed_string in enumerate(fixed_strings, 1):
+      result = result.replace("{%d}" % i, fixed_string)
 
     # Insert attributes
     result = escape(result)
