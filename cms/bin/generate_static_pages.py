@@ -79,6 +79,12 @@ def generate_pages(repo, output_dir):
       locales.append(defaultlocale)
 
     # First pass: compile the list of pages with given translation level
+    def get_locale_file(page):
+      try:
+        return config.get("locale_overrides", page)
+      except ConfigParser.Error:
+        return page
+
     pagelist = set()
     blacklist = set()
     for page, format in source.list_pages():
@@ -90,15 +96,12 @@ def generate_pages(repo, output_dir):
           if params["translation_ratio"] >= MIN_TRANSLATED:
             pagelist.add((locale, page))
           else:
-            blacklist.add((locale, page))
+            blacklist.add((locale, get_locale_file(page)))
 
     # Override existance check to avoid linking to pages we don't generate
     orig_has_locale = source.has_locale
     def has_locale(locale, page):
-      try:
-        page = config.get("locale_overrides", page)
-      except ConfigParser.Error:
-        pass
+      page = get_locale_file(page)
       if (locale, page) in blacklist:
         return False
       return orig_has_locale(locale, page)
