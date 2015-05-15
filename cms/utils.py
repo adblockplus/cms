@@ -61,7 +61,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None):
   locales = [
     l
     for l in source.list_locales()
-    if source.has_locale(locale, localefile)
+    if source.has_locale(l, localefile)
   ]
   if defaultlocale not in locales:
     locales.append(defaultlocale)
