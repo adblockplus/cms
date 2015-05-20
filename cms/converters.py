@@ -17,7 +17,6 @@
 
 import os
 import HTMLParser
-import imp
 import re
 
 import jinja2
@@ -327,7 +326,6 @@ class TemplateConverter(Converter):
       "get_page_content": self.get_page_content,
     }
 
-    self._module_refs = []
     for dirname, dictionary in [("filters", filters), ("globals", globals)]:
       for filename in self._params["source"].list_files(dirname):
         root, ext = os.path.splitext(filename)
@@ -335,20 +333,8 @@ class TemplateConverter(Converter):
           continue
 
         path = "%s/%s" % (dirname, filename)
-        code = self._params["source"].read_file(path)
-        module = imp.new_module(root.replace("/", "."))
-        exec code in module.__dict__
-
         name = os.path.basename(root)
-        if not hasattr(module, name):
-          raise Exception("Expected symbol %s not found in %s file %s" % (name, dirname, filename))
-        dictionary[name] = getattr(module, name)
-
-        # HACK: The module we created here can be garbage collected because it
-        # isn't added to sys.modules. If a function is called and its module is
-        # gone it might cause weird errors (imports and module variables
-        # unavailable). We avoid this situation by keeping a reference.
-        self._module_refs.append(module)
+        dictionary[name] = self._params["source"].import_symbol(path, name)
 
     self._env = jinja2.Environment(loader=self._SourceLoader(self._params["source"]), autoescape=True)
     self._env.filters.update(filters)
