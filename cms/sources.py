@@ -67,6 +67,16 @@ class Source:
     config.readfp(StringIO(configdata))
     return config
 
+  def import_symbol(self, filename, symbol):
+    code = self.read_file(filename)
+    namespace = {}
+    exec code in namespace
+
+    try:
+      return namespace[symbol]
+    except KeyError:
+      raise Exception("Expected symbol %s not found in %s" % (symbol, filename))
+
   #
   # Page helpers
   #

@@ -71,6 +71,7 @@ def generate_pages(repo, output_dir):
     source.read_template = memoize(source.read_template)
     source.read_locale = memoize(source.read_locale)
     source.read_include = memoize(source.read_include)
+    source.import_symbol = memoize(source.import_symbol)
 
     config = source.read_config()
     defaultlocale = config.get("general", "defaultlocale")
