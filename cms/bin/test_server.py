@@ -50,10 +50,7 @@ ERROR_TEMPLATE = """
 # behavior by parsing local config files.
 mime_types = mimetypes.MimeTypes()
 
-def get_data(path):
-  if source.has_static(path):
-    return source.read_static(path)
-
+def get_page(path):
   path = path.strip("/")
   if path == "":
     path = source.read_config().get("general", "defaultlocale")
@@ -64,14 +61,34 @@ def get_data(path):
 
   default_page = source.read_config().get("general", "defaultpage")
   alternative_page = "/".join([page, default_page]).lstrip("/")
+
   for format in converters.iterkeys():
     for p in (page, alternative_page):
       if source.has_page(p, format):
-        return process_page(source, locale, p, format, "http://127.0.0.1:5000")
+        return (p, process_page(source, locale, p, format, "http://127.0.0.1:5000"))
   if source.has_localizable_file(locale, page):
-    return source.read_localizable_file(locale, page)
+    return (page, source.read_localizable_file(locale, page))
 
-  return None
+  return (None, None)
+
+def has_conflicting_pages(page):
+  pages = [p for p, _ in source.list_pages()]
+  pages.extend(source.list_localizable_files())
+
+  if pages.count(page) > 1:
+    return True
+  if any(p.startswith(page + "/") or page.startswith(p + "/") for p in pages):
+    return True
+  return False
+
+def get_data(path):
+  if source.has_static(path):
+    return source.read_static(path)
+
+  page, data = get_page(path)
+  if page and has_conflicting_pages(page):
+    raise Exception("The requested page conflicts with another page")
+  return data
 
 def show_error(start_response, status, **kwargs):
   env = jinja2.Environment(autoescape=True)
@@ -85,7 +102,7 @@ def handler(environ, start_response):
   path = environ.get("PATH_INFO")
 
   data = get_data(path)
-  if data == None:
+  if data is None:
     return show_error(start_response, "404 Not Found", uri=path)
 
   mime = mime_types.guess_type(path)[0] or "text/html"
