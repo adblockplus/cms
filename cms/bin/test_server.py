@@ -99,10 +99,11 @@ def handler(environ, start_response):
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
-    print >>sys.stderr, "Usage: %s source_dir" % sys.argv[0]
-    sys.exit(1)
-
-  source = FileSource(sys.argv[1])
+    source = FileSource(os.curdir)
+  elif os.path.isdir(sys.argv[1]):
+    source = FileSource(sys.argv[1])
+  else:
+    sys.exit("Usage: %s [source_dir]" % sys.argv[0])
 
   try:
     from werkzeug.serving import run_simple
