@@ -27,8 +27,6 @@ a = AnalysisWithHiddenImportsWorkaround(
   excludes=[
     'distutils',
     'doctest',
-    'ssl',
-    '_ssl',
     'werkzeug',
 
     # Mac-specific
