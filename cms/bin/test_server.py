@@ -46,9 +46,9 @@ ERROR_TEMPLATE = """
   </body>
 </html>"""
 
-# Create our own instance, the default one will introduce "random" host-specific
-# behavior by parsing local config files.
-mime_types = mimetypes.MimeTypes()
+# Initilize the mimetypes modules manually for consistent behavior,
+# ignoring local files and Windows Registry.
+mimetypes.init([])
 
 def get_page(path):
   path = path.strip("/")
@@ -105,7 +105,7 @@ def handler(environ, start_response):
   if data is None:
     return show_error(start_response, "404 Not Found", uri=path)
 
-  mime = mime_types.guess_type(path)[0] or "text/html"
+  mime = mimetypes.guess_type(path)[0] or "text/html"
 
   if isinstance(data, unicode):
     data = data.encode(UNICODE_ENCODING)
