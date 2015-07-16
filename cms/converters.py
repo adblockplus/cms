@@ -125,7 +125,7 @@ class Converter:
       params[name.strip()] = value.strip()
     params[key] = "".join(lines)
 
-  def localize_string(self, name, default, localedata, escapes):
+  def localize_string(self, page, name, default, comment, localedata, escapes):
     def escape(s):
       return re.sub(r".",
         lambda match: escapes.get(match.group(0), match.group(0)),
@@ -146,6 +146,12 @@ class Converter:
       result = default
       self.missing_translations += 1
     self.total_translations += 1
+
+    # Perform callback with the string if required, e.g. for the translations script
+    callback = self._params["localized_string_callback"]
+    if callback:
+      callback(page, locale, name, result, comment, fixed_strings)
+
 
     # Insert fixed strings
     for i, fixed_string in enumerate(fixed_strings, 1):
@@ -185,9 +191,8 @@ class Converter:
       name, comment, default = match.groups()
       default = to_html(default).strip()
 
-      # Note: We currently ignore the comment, it is only relevant when
-      # generating the master translation.
-      return self.localize_string(name, default, self._params["localedata"], escapes)
+      return self.localize_string(self._params["page"], name, default,
+                                  comment, self._params["localedata"], escapes)
 
     return re.sub(
       r"{{\s*"
@@ -352,15 +357,17 @@ class TemplateConverter(Converter):
     return result
 
   def translate(self, default, name, comment=None):
-    # Note: We currently ignore the comment, it is only relevant when
-    # generating the master translation.
-    localedata = self._params["localedata"]
-    return jinja2.Markup(self.localize_string(name, default, localedata, html_escapes))
+    return jinja2.Markup(self.localize_string(
+      self._params["page"], name, default, comment,
+      self._params["localedata"], html_escapes
+    ))
 
   def get_string(self, name, page):
     localedata = self._params["source"].read_locale(self._params["locale"], page)
     default = localedata[name]
-    return jinja2.Markup(self.localize_string(name, default, localedata, html_escapes))
+    return jinja2.Markup(self.localize_string(
+      page, name, default, "", localedata, html_escapes
+    ))
 
   def get_page_content(self, page, locale=None):
     from cms.utils import get_page_params

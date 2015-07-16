@@ -16,6 +16,7 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import codecs
+import collections
 import ConfigParser
 import json
 import os
@@ -168,10 +169,9 @@ class Source:
 
   def read_locale(self, locale, page):
     default_locale = self.read_config().get("general", "defaultlocale")
-    if locale == default_locale:
-      result = {}
-    else:
-      result = dict(self.read_locale(default_locale, page))
+    result = collections.OrderedDict()
+    if locale != default_locale:
+      result.update(self.read_locale(default_locale, page))
 
     if self.has_locale(locale, page):
       filedata = self.read_file(self.locale_filename(locale, page))

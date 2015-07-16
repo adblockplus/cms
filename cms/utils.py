@@ -17,7 +17,8 @@
 
 from cms.converters import converters, TemplateConverter
 
-def get_page_params(source, locale, page, format=None, site_url_override=None):
+def get_page_params(source, locale, page, format=None, site_url_override=None,
+                    localized_string_callback=None):
   # Guess page format if omitted, but default to Markdown for friendlier exceptions
   if format is None:
     for format in converters.iterkeys():
@@ -33,6 +34,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None):
     "page": page,
     "pagedata": source.read_page(page, format),
     "config": source.read_config(),
+    "localized_string_callback": localized_string_callback,
   }
 
   localefile = page
@@ -77,8 +79,10 @@ def get_page_params(source, locale, page, format=None, site_url_override=None):
 
   return params
 
-def process_page(source, locale, page, format=None, site_url_override=None):
+def process_page(source, locale, page, format=None, site_url_override=None,
+                 localized_string_callback=None):
   return TemplateConverter(
-    get_page_params(source, locale, page, format, site_url_override),
+    get_page_params(source, locale, page, format,
+                    site_url_override, localized_string_callback),
     key="templatedata"
   )()
