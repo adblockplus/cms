@@ -362,7 +362,10 @@ class TemplateConverter(Converter):
       self._params["localedata"], html_escapes
     ))
 
-  def get_string(self, name, page):
+  def get_string(self, name, page=None):
+    if page is None:
+      page = self._params["page"]
+
     localedata = self._params["source"].read_locale(self._params["locale"], page)
     default = localedata[name]
     return jinja2.Markup(self.localize_string(
