@@ -117,6 +117,7 @@ class Converter:
     self._params = params
     self._key = key
     self._attribute_parser = AttributeParser(self.whitelist)
+    self._seen_defaults  = {}
 
     # Read in any parameters specified at the beginning of the file
     lines = params[key].splitlines(True)
@@ -132,6 +133,16 @@ class Converter:
         s, flags=re.S)
     def re_escape(s):
       return re.escape(escape(s))
+
+    # Handle duplicated strings
+    if default:
+      self._seen_defaults[(page, name)] = (default, comment)
+    else:
+      try:
+        default, comment = self._seen_defaults[(page, name)]
+      except KeyError:
+        raise Exception("Text not yet defined for string %s on page %s" %
+                        (name, page))
 
     # Extract tag attributes from default string
     default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params["page"])
@@ -189,19 +200,20 @@ class Converter:
   def insert_localized_strings(self, text, escapes, to_html=lambda s: s):
     def lookup_string(match):
       name, comment, default = match.groups()
-      default = to_html(default).strip()
-
+      if default:
+        default = to_html(default).strip()
       return self.localize_string(self._params["page"], name, default,
                                   comment, self._params["localedata"], escapes)
 
     return re.sub(
       r"{{\s*"
       r"([\w\-]+)" # String ID
-      r"(?:\[(.*?)\])?" # Optional comment
-      r"\s+"
-      r"((?:(?!{{).|" # Translatable text
-        r"{{(?:(?!}}).)*}}" # Nested translation
-      r")*?)"
+      r"(?:(?:\[(.*?)\])?" # Optional comment
+        r"\s+"
+        r"((?:(?!{{).|" # Translatable text
+          r"{{(?:(?!}}).)*}}" # Nested translation
+        r")*?)"
+      r")?"
       r"}}",
       lookup_string,
       text,
