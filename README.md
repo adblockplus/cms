@@ -210,24 +210,40 @@ tags are allowed and can be used where Markdown syntax isn't sufficient. The
 extension is active and allows specifying custom attributes for the generated
 HTML tags.
 
-Localizable strings are retrieved from the locale file with the name matching
-the page name. The following syntax can be used: `$foo$` inserts a string named
-`foo` from the locale (no HTML code or Markdown syntax allowed in the string).
-The syntax `$foo(foopage, http://example.com/)$` will work similarly but will
-look for `<a>...</a>` blocks in the string: the first will be turned into a link
-to the page `foopage`, the second will become a link to `http://example.com/`.
-
 Any content between `<head>` and `</head>` tags will be inserted into the head
 of the generated web page, this is meant for styles, scripts and the like.
 Other pages should be linked by using their name as link target (relative links),
 these links will be resolved to point to the most appropriate page language.
 Embedding localizable images works the same, use the image name as image source.
 
+Localizable strings can be specified inline with the following syntax:
+
+    {{string_name String contents in default language}}
+
+Try to give the string a descriptive name as it will help translators.
+Optionally you can add a description for strings as well to provide even more
+context:
+
+    {{string_name[The string description] String contents}}
+
+_Note: String names and descriptions have no effect on the generated page,
+assuming string name is unique to the page. The name and description are just
+used to provide translators with additional context about the string._
+
+Finally if you find yourself using the same string multiple times in a page
+you can reduce duplication by simply omitting the description and contents
+after the first use. For example:
+
+    {{title[Title of the page] Adblock Plus - Home}}
+    {{title}}
+
 #### Raw HTML format (html) ####
 
 This format is similar to the Markdown format but uses regular HTML syntax.
 No processing is performed beyond inserting localized strings and resolving
 links to pages and images. This format is mainly meant for legacy content.
+The syntax for localizable strings documented above can be used as with
+Markdown.
 
 #### Jinja2 format (tmpl) ####
 
@@ -248,13 +264,26 @@ The following variables can be used:
 
 Following custom filters can be used:
 
-* `translate(string, locale=None)`: retrieves a string from a locale file.
-  Unless a locale is specified the locale file matching the page name is used.
+* `translate(default, name, comment=None)`: translates the given default string
+   and string name for the current page and locale. The string name should be
+   unique for the page but otherwise is only seen by the translators. Optionally
+   a comment (description) can be specified to help provide the translators with
+   additional context.
 * `linkify(url)`: generates an `<a href="...">` tag for the URL. If the URL is
   a page name it will be converted into a link to the most appropriate page
   language.
 * `toclist(html)`: extracts a list of headings from HTML code, this can be used
   to generate a table of contents.
+
+The following global functions can be used:
+
+* `get_string(name, page=None)`: retrieves a string from a locale file.
+  Unless a page is specified the locale file matching the name of the current
+  page is used.
+* `get_page_content(page, locale=None)`: returns a dictionary of the content
+  and params for the given page and locale. Locale defaults to the current one
+  if not specified. Provided keys include `head`, `body`, `available_locales`
+  and `translation_ratio`.
 
 ### Static files ###
 
