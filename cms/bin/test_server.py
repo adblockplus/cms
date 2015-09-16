@@ -123,7 +123,11 @@ if __name__ == "__main__":
     sys.exit("Usage: %s [source_dir]" % sys.argv[0])
 
   try:
-    from werkzeug.serving import run_simple
+    from werkzeug.serving import ThreadedWSGIServer, run_simple
+
+    # see https://github.com/mitsuhiko/werkzeug/pull/770
+    ThreadedWSGIServer.daemon_threads = True
+
     def run(*args, **kwargs):
       # The werkzeug logger must be configured before the
       # root logger. Also we must prevent it from propagating
@@ -134,9 +138,14 @@ if __name__ == "__main__":
       logger.setLevel(logging.INFO)
       logger.addHandler(logging.StreamHandler())
 
-      run_simple(*args, **kwargs)
+      run_simple(threaded=True, *args, **kwargs)
   except ImportError:
-    from wsgiref.simple_server import make_server
+    from SocketServer import ThreadingMixIn
+    from wsgiref.simple_server import WSGIServer, make_server
+
+    class ThreadedWSGIServer(ThreadingMixIn, WSGIServer):
+      daemon_threads = True
+
     def run(host, port, app, **kwargs):
       def wrapper(environ, start_response):
         try:
@@ -145,7 +154,7 @@ if __name__ == "__main__":
           return show_error(start_response, "500 Internal Server Error",
               uri=environ.get("PATH_INFO"), error=e)
 
-      server = make_server(host, port, wrapper)
+      server = make_server(host, port, wrapper, ThreadedWSGIServer)
       print " * Running on http://%s:%i/" % server.server_address
       server.serve_forever()
 
