@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import codecs
+import io
 import collections
 import ConfigParser
 import json
@@ -63,20 +63,17 @@ class Source:
     return locale, urlparse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
 
   def read_config(self):
-    configdata = self.read_file("settings.ini")
+    configdata = self.read_file("settings.ini")[0]
     config = ConfigParser.SafeConfigParser()
     config.readfp(StringIO(configdata))
     return config
 
-  def import_symbol(self, filename, symbol):
-    code = self.read_file(filename)
+  def exec_file(self, filename):
+    source, filename = self.read_file(filename)
+    code = compile(source, filename, "exec")
     namespace = {}
     exec code in namespace
-
-    try:
-      return namespace[symbol]
-    except KeyError:
-      raise Exception("Expected symbol %s not found in %s" % (symbol, filename))
+    return namespace
 
   #
   # Page helpers
@@ -124,7 +121,7 @@ class Source:
     return self.has_file(self.localizable_file_filename(locale, filename))
 
   def read_localizable_file(self, locale, filename):
-    return self.read_file(self.localizable_file_filename(locale, filename), binary=True)
+    return self.read_file(self.localizable_file_filename(locale, filename), binary=True)[0]
 
   #
   # Static file helpers
@@ -141,7 +138,7 @@ class Source:
     return self.has_file(self.static_filename(filename))
 
   def read_static(self, filename):
-    return self.read_file(self.static_filename(filename), binary=True)
+    return self.read_file(self.static_filename(filename), binary=True)[0]
 
   #
   # Locale helpers
@@ -174,7 +171,7 @@ class Source:
       result.update(self.read_locale(default_locale, page))
 
     if self.has_locale(locale, page):
-      filedata = self.read_file(self.locale_filename(locale, page))
+      filedata = self.read_file(self.locale_filename(locale, page))[0]
       localedata = json.loads(filedata)
       for key, value in localedata.iteritems():
         result[key] = value["message"]
@@ -236,10 +233,10 @@ class MercurialSource(Source):
     return True
 
   def read_file(self, filename, binary=False):
-    result = self._archive.read("./%s" % filename)
+    data = self._archive.read("./%s" % filename)
     if not binary:
-      result = result.decode("utf-8")
-    return result
+      data = data.decode("utf-8")
+    return (data, "%s!%s" % (self._name, filename))
 
   def list_files(self, subdir):
     prefix = "./%s/" % subdir
@@ -271,9 +268,15 @@ class FileSource(Source):
     return os.path.isfile(self.get_path(filename))
 
   def read_file(self, filename, binary=False):
-    encoding = None if binary else "utf-8"
-    with codecs.open(self.get_path(filename), "rb", encoding=encoding) as handle:
-      return handle.read()
+    path = self.get_path(filename)
+
+    if binary:
+      file = open(path, "rb")
+    else:
+      file = io.open(path, "r", encoding="utf-8")
+
+    with file:
+      return (file.read(), path)
 
   def list_files(self, subdir):
     result = []

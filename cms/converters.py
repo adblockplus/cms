@@ -120,11 +120,15 @@ class Converter:
     self._seen_defaults  = {}
 
     # Read in any parameters specified at the beginning of the file
-    lines = params[key].splitlines(True)
-    while lines and re.search(r"^\s*[\w\-]+\s*=", lines[0]):
-      name, value = lines.pop(0).split("=", 1)
+    data, filename = params[key]
+    lines = data.splitlines(True)
+    for i, line in enumerate(lines):
+      if not re.search(r"^\s*[\w\-]+\s*=", line):
+        break
+      name, value = line.split("=", 1)
       params[name.strip()] = value.strip()
-    params[key] = "".join(lines)
+      lines[i] = "\n"
+    params[key] = ("".join(lines), filename)
 
   def localize_string(self, page, name, default, comment, localedata, escapes):
     def escape(s):
@@ -277,7 +281,7 @@ class Converter:
       return result
 
 class RawConverter(Converter):
-  def get_html(self, source):
+  def get_html(self, (source, filename)):
     result = self.insert_localized_strings(source, html_escapes)
     result = self.process_links(result)
     return result
@@ -292,7 +296,7 @@ class MarkdownConverter(Converter):
     re.escape(jinja2.escape(Converter.include_end_regex))
   )
 
-  def get_html(self, source):
+  def get_html(self, (source, filename)):
     def remove_unnecessary_entities(match):
       char = unichr(int(match.group(1)))
       if char in html_escapes:
@@ -318,17 +322,18 @@ class MarkdownConverter(Converter):
     result = self.process_links(result)
     return result
 
+class SourceTemplateLoader(jinja2.BaseLoader):
+  def __init__(self, source):
+    self.source = source
+
+  def get_source(self, environment, template):
+    try:
+      result = self.source.read_file(template + ".tmpl")
+    except Exception:
+      raise jinja2.TemplateNotFound(template)
+    return result + (None,)
+
 class TemplateConverter(Converter):
-  class _SourceLoader(jinja2.BaseLoader):
-    def __init__(self, source):
-      self.source = source
-
-    def get_source(self, environment, template):
-      try:
-        return self.source.read_file(template + ".tmpl"), None, None
-      except Exception:
-        raise jinja2.TemplateNotFound(template)
-
   def __init__(self, *args, **kwargs):
     Converter.__init__(self, *args, **kwargs)
 
@@ -350,16 +355,28 @@ class TemplateConverter(Converter):
           continue
 
         path = "%s/%s" % (dirname, filename)
-        name = os.path.basename(root)
-        dictionary[name] = self._params["source"].import_symbol(path, name)
+        namespace = self._params["source"].exec_file(path)
 
-    self._env = jinja2.Environment(loader=self._SourceLoader(self._params["source"]), autoescape=True)
+        name = os.path.basename(root)
+        try:
+          dictionary[name] = namespace[name]
+        except KeyError:
+          raise Exception("Expected symbol %r not found in %r" % (name, path))
+
+    self._env = jinja2.Environment(loader=SourceTemplateLoader(self._params["source"]), autoescape=True)
     self._env.filters.update(filters)
     self._env.globals.update(globals)
 
-  def get_html(self, source):
-    template = self._env.from_string(source)
-    module = template.make_module(self._params)
+  def get_html(self, (source, filename)):
+    env = self._env
+    code = env.compile(source, None, filename)
+    template = jinja2.Template.from_code(env, code, env.globals)
+
+    try:
+      module = template.make_module(self._params)
+    except Exception:
+      env.handle_exception()
+
     for key, value in module.__dict__.iteritems():
       if not key.startswith("_"):
         self._params[key] = value
