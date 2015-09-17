@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import posixpath
+import shutil
 import sys
 import urllib
 import zipfile
@@ -117,24 +118,36 @@ def extract_strings(source, defaultlocale):
                            format=format, localized_string_callback=record_string)
   return page_strings
 
-def configure_locales(crowdin_api, required_locales, enabled_locales,
+def configure_locales(crowdin_api, local_locales, enabled_locales,
                       defaultlocale):
   logger.info("Checking which locales are supported by Crowdin...")
   response = crowdin_api.request("GET", "supported-languages")
 
   supported_locales = {l["crowdin_code"] for l in response}
-  skipped_locales = required_locales - supported_locales
 
-  if skipped_locales:
-    logger.warning("Ignoring locales that Crowdin doesn't support: %s",
-                   ", ".join(skipped_locales))
-    required_locales -= skipped_locales
+  # We need to map the locale names we use to the ones that Crowdin is expecting
+  # and at the same time ensure that they are supported.
+  required_locales = {}
+  for locale in local_locales:
+    if "_" in locale:
+      crowdin_locale = locale.replace("_", "-")
+    elif locale in supported_locales:
+      crowdin_locale = locale
+    else:
+      crowdin_locale = "%s-%s" % (locale, locale.upper())
 
-  if not required_locales.issubset(enabled_locales):
+    if crowdin_locale in supported_locales:
+      required_locales[locale] = crowdin_locale
+    else:
+      logger.warning("Ignoring locale '%s', which Crowdin doesn't support",
+                     locale)
+
+  required_crowdin_locales = set(required_locales.values())
+  if not required_crowdin_locales.issubset(enabled_locales):
     logger.info("Enabling the required locales for the Crowdin project...")
     crowdin_api.request(
       "POST", "edit-project",
-      data={"languages": enabled_locales | required_locales}
+      data={"languages": enabled_locales | required_crowdin_locales}
     )
 
   return required_locales
@@ -198,13 +211,13 @@ def upload_translations(crowdin_api, source_dir, new_files, required_locales):
           yield (file_name, f.read(), "application/json")
 
   if new_files:
-    for locale in required_locales:
+    for locale, crowdin_locale in required_locales.iteritems():
       for files in grouper(open_locale_files(locale, new_files),
                            crowdin_api.FILES_PER_REQUEST):
         logger.info("Uploading %d existing translation "
                     "files for locale %s...", len(files), locale)
         crowdin_api.request("POST", "upload-translation", files=files,
-                            data={"language": locale})
+                            data={"language": crowdin_locale})
 
 def remove_old_files(crowdin_api, old_files):
   for file_name in old_files:
@@ -226,6 +239,8 @@ def download_translations(crowdin_api, source_dir, required_locales):
   logger.info("Downloading translations archive...")
   response = crowdin_api.raw_request("GET", "download/all.zip")
 
+  inverted_required_locales = {crowdin: local for local, crowdin in
+                               required_locales.iteritems()}
   logger.info("Extracting translations archive...")
   with zipfile.ZipFile(io.BytesIO(response.data), "r") as archive:
     locale_path = os.path.join(source_dir, "locales")
@@ -240,9 +255,16 @@ def download_translations(crowdin_api, source_dir, required_locales):
     for member in archive.namelist():
       path, file_name = posixpath.split(member)
       ext = posixpath.splitext(file_name)[1]
-      locale = path.split(posixpath.sep)[0]
-      if ext.lower() == ".json" and locale in required_locales:
-        archive.extract(member, locale_path)
+      path_parts = path.split(posixpath.sep)
+      locale, file_path = path_parts[0], path_parts[1:]
+      if ext.lower() == ".json" and locale in inverted_required_locales:
+        output_path = os.path.join(
+          locale_path, inverted_required_locales[locale],
+          *file_path + [file_name]
+        )
+        with archive.open(member) as source_file, \
+             open(output_path, "wb") as target_file:
+          shutil.copyfileobj(source_file, target_file)
 
 def crowdin_sync(source_dir, crowdin_api_key):
   with FileSource(source_dir) as source:
@@ -256,10 +278,10 @@ def crowdin_sync(source_dir, crowdin_api_key):
     project_info = crowdin_api.request("GET", "info")
     page_strings = extract_strings(source, defaultlocale)
 
-    required_locales = {l for l in source.list_locales() if l != defaultlocale}
+    local_locales = source.list_locales() - {defaultlocale}
     enabled_locales = {l["code"] for l in project_info["languages"]}
 
-  required_locales = configure_locales(crowdin_api, required_locales,
+  required_locales = configure_locales(crowdin_api, local_locales,
                                        enabled_locales, defaultlocale)
 
   remote_files, remote_directories = list_remote_files(project_info)
