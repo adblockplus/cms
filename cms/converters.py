@@ -268,7 +268,7 @@ class Converter:
     )
 
   def __call__(self):
-    result = self.get_html(self._params[self._key])
+    result = self.get_html(*self._params[self._key])
     result = self.resolve_includes(result)
     if self._key == "pagedata":
       head = []
@@ -281,7 +281,7 @@ class Converter:
       return result
 
 class RawConverter(Converter):
-  def get_html(self, (source, filename)):
+  def get_html(self, source, filename):
     result = self.insert_localized_strings(source, html_escapes)
     result = self.process_links(result)
     return result
@@ -296,7 +296,7 @@ class MarkdownConverter(Converter):
     re.escape(jinja2.escape(Converter.include_end_regex))
   )
 
-  def get_html(self, (source, filename)):
+  def get_html(self, source, filename):
     def remove_unnecessary_entities(match):
       char = unichr(int(match.group(1)))
       if char in html_escapes:
@@ -367,7 +367,7 @@ class TemplateConverter(Converter):
     self._env.filters.update(filters)
     self._env.globals.update(globals)
 
-  def get_html(self, (source, filename)):
+  def get_html(self, source, filename):
     env = self._env
     code = env.compile(source, None, filename)
     template = jinja2.Template.from_code(env, code, env.globals)
