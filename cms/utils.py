@@ -49,9 +49,11 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
       params["site_url"] = params["config"].get("general", "siteurl")
 
   try:
-    converter = converters[format](params)
+    converter_class = converters[format]
   except KeyError:
     raise Exception("Page %s uses unknown format %s" % (page, format))
+
+  converter = converter_class(params)
 
   # Note: The converter might change some parameters so we can only read in
   # template data here.
