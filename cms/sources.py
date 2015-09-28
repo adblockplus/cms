@@ -41,7 +41,7 @@ class Source:
     config = self.read_config()
     default_locale = config.get("general", "defaultlocale")
     default_page = config.get("general", "defaultpage")
-    alternative_page = "/".join([page, default_page]).lstrip("/")
+    alternative_page = "/".join([page.rstrip("/"), default_page]).lstrip("/")
 
     if self.has_localizable_file(default_locale, page):
       if not self.has_localizable_file(locale, page):
