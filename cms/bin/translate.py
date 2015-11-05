@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
+import codecs
 import collections
 import io
 import itertools
@@ -22,7 +23,6 @@ import json
 import logging
 import os
 import posixpath
-import shutil
 import sys
 import urllib
 import zipfile
@@ -262,9 +262,12 @@ def download_translations(crowdin_api, source_dir, required_locales):
           locale_path, inverted_required_locales[locale],
           *file_path + [file_name]
         )
-        with archive.open(member) as source_file, \
-             open(output_path, "wb") as target_file:
-          shutil.copyfileobj(source_file, target_file)
+        with archive.open(member) as source_file:
+          locale_file_contents = json.load(source_file)
+          if len(locale_file_contents):
+            with codecs.open(output_path, "wb", "utf-8") as target_file:
+              json.dump(locale_file_contents, target_file, ensure_ascii=False,
+                        sort_keys=True, indent=2, separators=(",", ": "))
 
 def crowdin_sync(source_dir, crowdin_api_key):
   with FileSource(source_dir) as source:
