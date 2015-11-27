@@ -206,9 +206,9 @@ be inserted (whichever is present).
 This format should normally be used, it allows the pages to be defined using the
 [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax. Raw HTML
 tags are allowed and can be used where Markdown syntax isn't sufficient. The
-[Attribute Lists](http://pythonhosted.org/Markdown/extensions/attr_list.html)
+[Python-Markdown Extra](https://pythonhosted.org/Markdown/extensions/extra.html)
 extension is active and allows specifying custom attributes for the generated
-HTML tags.
+HTML tags, HTML block elements that contain Markdown and more.
 
 Any content between `<head>` and `</head>` tags will be inserted into the head
 of the generated web page, this is meant for styles, scripts and the like.

@@ -19,7 +19,14 @@ a = AnalysisWithHiddenImportsWorkaround(
   ['cms/bin/test_server.py'],
   pathex=['.'],
   hiddenimports=[
+    'markdown.extensions.extra',
+    'markdown.extensions.smart_strong',
+    'markdown.extensions.fenced_code',
+    'markdown.extensions.footnotes',
     'markdown.extensions.attr_list',
+    'markdown.extensions.def_list',
+    'markdown.extensions.tables',
+    'markdown.extensions.abbr',
 
     # Used by globals/get_browser_versions.py in web.adblockplus.org
     'xml.dom.minidom',

@@ -310,7 +310,7 @@ class MarkdownConverter(Converter):
     for key, value in html_escapes.iteritems():
       escapes[key] = value
 
-    md = markdown.Markdown(output="html5", extensions=["attr_list"])
+    md = markdown.Markdown(output="html5", extensions=["extra"])
     md.preprocessors["html_block"].markdown_in_raw = True
 
     def to_html(s):
