@@ -109,7 +109,7 @@ class AttributeParser(HTMLParser.HTMLParser):
     self._append_text(self.unescape("&#%s;" % name))
 
 class Converter:
-  whitelist = {"a", "em", "strong", "code", "span"}
+  whitelist = {"a", "em", "sup", "strong", "code", "span"}
   missing_translations = 0
   total_translations = 0
 
