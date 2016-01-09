@@ -269,9 +269,11 @@ Following custom filters can be used:
    unique for the page but otherwise is only seen by the translators. Optionally
    a comment (description) can be specified to help provide the translators with
    additional context.
-* `linkify(url)`: generates an `<a href="...">` tag for the URL. If the URL is
-  a page name it will be converted into a link to the most appropriate page
-  language.
+* `linkify(url, locale=None, **attrs)`: generates an `<a href="...">` tag for
+   the URL. If the URL is a page name it will be converted into a link to the
+   most appropriate page language. The language used can also be specified
+   manually with the locale parameter. Any further keyword arguments passed
+   are turned into additional HTML attributes for the tag.
 * `toclist(html)`: extracts a list of headings from HTML code, this can be used
   to generate a table of contents.
 
