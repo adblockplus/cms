@@ -18,6 +18,7 @@
 import mimetypes
 import os
 import sys
+import argparse
 
 import jinja2
 
@@ -26,6 +27,8 @@ from cms.sources import FileSource
 from cms.converters import converters
 
 source = None
+address = None
+port = None
 
 UNICODE_ENCODING = "utf-8"
 
@@ -65,7 +68,7 @@ def get_page(path):
   for format in converters.iterkeys():
     for p in (page, alternative_page):
       if source.has_page(p, format):
-        return (p, process_page(source, locale, p, format, "http://127.0.0.1:5000"))
+        return (p, process_page(source, locale, p, format, "http://%s:%d" % (address, port)))
   if source.has_localizable_file(locale, page):
     return (page, source.read_localizable_file(locale, page))
 
@@ -115,12 +118,16 @@ def handler(environ, start_response):
   return [data]
 
 if __name__ == "__main__":
-  if len(sys.argv) < 2:
-    source = FileSource(os.curdir)
-  elif os.path.isdir(sys.argv[1]):
-    source = FileSource(sys.argv[1])
-  else:
-    sys.exit("Usage: %s [source_dir]" % sys.argv[0])
+
+  parser = argparse.ArgumentParser(description='CMS development server created to test pages locally and on-the-fly')
+  parser.add_argument('path', nargs='?', default=os.curdir)
+  parser.add_argument('-a', '--address', default='localhost', help='Address of the interface the server will listen on')
+  parser.add_argument('-p', '--port', type=int, default=5000, help='TCP port the server will listen on')
+  args = parser.parse_args()
+
+  source = FileSource(args.path)
+  address = args.address
+  port = args.port
 
   try:
     from werkzeug.serving import ThreadedWSGIServer, run_simple
@@ -158,4 +165,4 @@ if __name__ == "__main__":
       print " * Running on http://%s:%i/" % server.server_address
       server.serve_forever()
 
-  run("localhost", 5000, handler, use_reloader=True, use_debugger=True)
+  run(address, port, handler, use_reloader=True, use_debugger=True)
