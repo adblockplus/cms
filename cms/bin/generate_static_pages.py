@@ -92,7 +92,7 @@ def generate_pages(repo, output_dir):
       for locale in locales:
         if locale == defaultlocale:
           pagelist.add((locale, page))
-        elif source.has_locale(locale, page):
+        else:
           params = get_page_params(source, locale, page, format)
           if params["translation_ratio"] >= MIN_TRANSLATED:
             pagelist.add((locale, page))
