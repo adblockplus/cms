@@ -181,11 +181,16 @@ class Converter:
       )
 
     for tag in self.whitelist:
+      allowed_contents = "(?:[^<>]|%s)" % "|".join((
+        "<(?:%s[^<>]*?|/%s)>" % (t, t)
+         for t in map(re.escape, self.whitelist - {tag})
+      ))
       saved = saved_attributes.get(tag, [])
       for attrs in saved:
         attrs = map(stringify_attribute, attrs)
         result = re.sub(
-          r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
+          r"%s(%s*?)%s" % (re_escape("<%s>" % tag), allowed_contents,
+                           re_escape("</%s>" % tag)),
           lambda match: r'<%s%s>%s</%s>' % (
             tag,
             " " + " ".join(attrs) if attrs else "",
@@ -195,7 +200,8 @@ class Converter:
           result, 1, flags=re.S
         )
       result = re.sub(
-        r"%s([^<>]*?)%s" % (re_escape("<%s>" % tag), re_escape("</%s>" % tag)),
+        r"%s(%s*?)%s" % (re_escape("<%s>" % tag), allowed_contents,
+                         re_escape("</%s>" % tag)),
         r"<%s>\1</%s>" % (tag, tag),
         result, flags=re.S
       )
