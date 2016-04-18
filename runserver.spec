@@ -3,57 +3,59 @@
 # Hidden imports are supposed to be analyzed recursively. However, due to
 # a bug in PyInstaller imports from inside hidden modules aren't considered.
 # https://github.com/pyinstaller/pyinstaller/issues/1086
+
+
 def AnalysisWithHiddenImportsWorkaround(scripts, **kwargs):
-  import os
+    import os
 
-  filename = os.path.join(WORKPATH, '_hidden_imports.py')
-  with open(filename, 'wb') as file:
-    for module in kwargs.pop('hiddenimports'):
-      print >>file, 'import ' + module
+    filename = os.path.join(WORKPATH, '_hidden_imports.py')
+    with open(filename, 'wb') as file:
+        for module in kwargs.pop('hiddenimports'):
+            print >>file, 'import ' + module
 
-  a = Analysis([filename] + scripts, **kwargs)
-  a.scripts -= [('_hidden_imports', None, None)]
-  return a
+    a = Analysis([filename] + scripts, **kwargs)
+    a.scripts -= [('_hidden_imports', None, None)]
+    return a
 
 a = AnalysisWithHiddenImportsWorkaround(
-  ['cms/bin/test_server.py'],
-  pathex=['.'],
-  hiddenimports=[
-    'markdown.extensions.extra',
-    'markdown.extensions.smart_strong',
-    'markdown.extensions.fenced_code',
-    'markdown.extensions.footnotes',
-    'markdown.extensions.attr_list',
-    'markdown.extensions.def_list',
-    'markdown.extensions.tables',
-    'markdown.extensions.abbr',
+    ['cms/bin/test_server.py'],
+    pathex=['.'],
+    hiddenimports=[
+        'markdown.extensions.extra',
+        'markdown.extensions.smart_strong',
+        'markdown.extensions.fenced_code',
+        'markdown.extensions.footnotes',
+        'markdown.extensions.attr_list',
+        'markdown.extensions.def_list',
+        'markdown.extensions.tables',
+        'markdown.extensions.abbr',
 
-    # Used by globals/get_browser_versions.py in web.adblockplus.org
-    'xml.dom.minidom',
-  ],
-  excludes=[
-    'distutils',
-    'doctest',
-    'werkzeug',
+        # Used by globals/get_browser_versions.py in web.adblockplus.org
+        'xml.dom.minidom',
+    ],
+    excludes=[
+        'distutils',
+        'doctest',
+        'werkzeug',
 
-    # Mac-specific
-    'Carbon',
-    'Finder',
-    'StdSuites',
-  ],
+        # Mac-specific
+        'Carbon',
+        'Finder',
+        'StdSuites',
+    ],
 )
 
 pyz = PYZ(a.pure)
 
 exe = EXE(
-  pyz,
-  a.scripts,
-  a.binaries,
-  a.zipfiles,
-  a.datas,
-  name='runserver',
-  debug=False,
-  strip=None,
-  upx=False,
-  console=True
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    name='runserver',
+    debug=False,
+    strip=None,
+    upx=False,
+    console=True
 )

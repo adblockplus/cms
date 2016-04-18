@@ -53,116 +53,121 @@ ERROR_TEMPLATE = """
 # ignoring local files and Windows Registry.
 mimetypes.init([])
 
+
 def get_page(path):
-  path = path.strip("/")
-  if path == "":
-    path = source.read_config().get("general", "defaultlocale")
-  if "/" in path:
-    locale, page = path.split("/", 1)
-  else:
-    locale, page = path, ""
+    path = path.strip("/")
+    if path == "":
+        path = source.read_config().get("general", "defaultlocale")
+    if "/" in path:
+        locale, page = path.split("/", 1)
+    else:
+        locale, page = path, ""
 
-  default_page = source.read_config().get("general", "defaultpage")
-  alternative_page = "/".join([page, default_page]).lstrip("/")
+    default_page = source.read_config().get("general", "defaultpage")
+    alternative_page = "/".join([page, default_page]).lstrip("/")
 
-  for format in converters.iterkeys():
-    for p in (page, alternative_page):
-      if source.has_page(p, format):
-        return (p, process_page(source, locale, p, format, "http://%s:%d" % (address, port)))
-  if source.has_localizable_file(locale, page):
-    return (page, source.read_localizable_file(locale, page))
+    for format in converters.iterkeys():
+        for p in (page, alternative_page):
+            if source.has_page(p, format):
+                return (p, process_page(source, locale, p, format, "http://%s:%d" % (address, port)))
+    if source.has_localizable_file(locale, page):
+        return (page, source.read_localizable_file(locale, page))
 
-  return (None, None)
+    return (None, None)
+
 
 def has_conflicting_pages(page):
-  pages = [p for p, _ in source.list_pages()]
-  pages.extend(source.list_localizable_files())
+    pages = [p for p, _ in source.list_pages()]
+    pages.extend(source.list_localizable_files())
 
-  if pages.count(page) > 1:
-    return True
-  if any(p.startswith(page + "/") or page.startswith(p + "/") for p in pages):
-    return True
-  return False
+    if pages.count(page) > 1:
+        return True
+    if any(p.startswith(page + "/") or page.startswith(p + "/") for p in pages):
+        return True
+    return False
+
 
 def get_data(path):
-  if source.has_static(path):
-    return source.read_static(path)
+    if source.has_static(path):
+        return source.read_static(path)
 
-  page, data = get_page(path)
-  if page and has_conflicting_pages(page):
-    raise Exception("The requested page conflicts with another page")
-  return data
+    page, data = get_page(path)
+    if page and has_conflicting_pages(page):
+        raise Exception("The requested page conflicts with another page")
+    return data
+
 
 def show_error(start_response, status, **kwargs):
-  env = jinja2.Environment(autoescape=True)
-  template = env.from_string(ERROR_TEMPLATE)
-  mime = "text/html; encoding=%s" % UNICODE_ENCODING
-  start_response(status, [("Content-Type", mime)])
-  for fragment in template.stream(status=status, **kwargs):
-    yield fragment.encode(UNICODE_ENCODING)
+    env = jinja2.Environment(autoescape=True)
+    template = env.from_string(ERROR_TEMPLATE)
+    mime = "text/html; encoding=%s" % UNICODE_ENCODING
+    start_response(status, [("Content-Type", mime)])
+    for fragment in template.stream(status=status, **kwargs):
+        yield fragment.encode(UNICODE_ENCODING)
+
 
 def handler(environ, start_response):
-  path = environ.get("PATH_INFO")
+    path = environ.get("PATH_INFO")
 
-  data = get_data(path)
-  if data is None:
-    return show_error(start_response, "404 Not Found", uri=path)
+    data = get_data(path)
+    if data is None:
+        return show_error(start_response, "404 Not Found", uri=path)
 
-  mime = mimetypes.guess_type(path)[0] or "text/html"
+    mime = mimetypes.guess_type(path)[0] or "text/html"
 
-  if isinstance(data, unicode):
-    data = data.encode(UNICODE_ENCODING)
-    mime = "%s; charset=%s" % (mime, UNICODE_ENCODING)
+    if isinstance(data, unicode):
+        data = data.encode(UNICODE_ENCODING)
+        mime = "%s; charset=%s" % (mime, UNICODE_ENCODING)
 
-  start_response("200 OK", [("Content-Type", mime)])
-  return [data]
+    start_response("200 OK", [("Content-Type", mime)])
+    return [data]
 
 if __name__ == "__main__":
 
-  parser = argparse.ArgumentParser(description='CMS development server created to test pages locally and on-the-fly')
-  parser.add_argument('path', nargs='?', default=os.curdir)
-  parser.add_argument('-a', '--address', default='localhost', help='Address of the interface the server will listen on')
-  parser.add_argument('-p', '--port', type=int, default=5000, help='TCP port the server will listen on')
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser(description='CMS development server created to test pages locally and on-the-fly')
+    parser.add_argument('path', nargs='?', default=os.curdir)
+    parser.add_argument('-a', '--address', default='localhost', help='Address of the interface the server will listen on')
+    parser.add_argument('-p', '--port', type=int, default=5000, help='TCP port the server will listen on')
+    args = parser.parse_args()
 
-  source = FileSource(args.path)
-  address = args.address
-  port = args.port
+    source = FileSource(args.path)
+    address = args.address
+    port = args.port
 
-  try:
-    from werkzeug.serving import ThreadedWSGIServer, run_simple
+    try:
+        from werkzeug.serving import ThreadedWSGIServer, run_simple
 
-    # see https://github.com/mitsuhiko/werkzeug/pull/770
-    ThreadedWSGIServer.daemon_threads = True
+        # see https://github.com/mitsuhiko/werkzeug/pull/770
+        ThreadedWSGIServer.daemon_threads = True
 
-    def run(*args, **kwargs):
-      # The werkzeug logger must be configured before the
-      # root logger. Also we must prevent it from propagating
-      # messages, otherwise messages are logged twice.
-      import logging
-      logger = logging.getLogger("werkzeug")
-      logger.propagate = False
-      logger.setLevel(logging.INFO)
-      logger.addHandler(logging.StreamHandler())
+        def run(*args, **kwargs):
+            # The werkzeug logger must be configured before the
+            # root logger. Also we must prevent it from propagating
+            # messages, otherwise messages are logged twice.
+            import logging
+            logger = logging.getLogger("werkzeug")
+            logger.propagate = False
+            logger.setLevel(logging.INFO)
+            logger.addHandler(logging.StreamHandler())
 
-      run_simple(threaded=True, *args, **kwargs)
-  except ImportError:
-    from SocketServer import ThreadingMixIn
-    from wsgiref.simple_server import WSGIServer, make_server
+            run_simple(threaded=True, *args, **kwargs)
+    except ImportError:
+        from SocketServer import ThreadingMixIn
+        from wsgiref.simple_server import WSGIServer, make_server
 
-    class ThreadedWSGIServer(ThreadingMixIn, WSGIServer):
-      daemon_threads = True
+        class ThreadedWSGIServer(ThreadingMixIn, WSGIServer):
+            daemon_threads = True
 
-    def run(host, port, app, **kwargs):
-      def wrapper(environ, start_response):
-        try:
-          return app(environ, start_response)
-        except Exception, e:
-          return show_error(start_response, "500 Internal Server Error",
-              uri=environ.get("PATH_INFO"), error=e)
+        def run(host, port, app, **kwargs):
+            def wrapper(environ, start_response):
+                try:
+                    return app(environ, start_response)
+                except Exception, e:
+                    return show_error(start_response, "500 Internal Server Error",
+                                      uri=environ.get("PATH_INFO"), error=e)
 
-      server = make_server(host, port, wrapper, ThreadedWSGIServer)
-      print " * Running on http://%s:%i/" % server.server_address
-      server.serve_forever()
+            server = make_server(host, port, wrapper, ThreadedWSGIServer)
+            print " * Running on http://%s:%i/" % server.server_address
+            server.serve_forever()
 
-  run(address, port, handler, use_reloader=True, use_debugger=True)
+    run(address, port, handler, use_reloader=True, use_debugger=True)
