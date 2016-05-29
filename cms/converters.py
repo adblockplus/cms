@@ -27,18 +27,18 @@ orig_isBlockLevel = markdown.util.isBlockLevel
 
 
 def isBlockLevel(tag):
-    if tag == "head":
+    if tag == 'head':
         return True
     else:
         return orig_isBlockLevel(tag)
 markdown.util.isBlockLevel = isBlockLevel
 
 html_escapes = {
-    "<": "&lt;",
-    ">": "&gt;",
-    "&": "&amp;",
-    "\"": "&quot;",
-    "'": "&#39;",
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    '"': '&quot;',
+    "'": '&#39;',
 }
 
 
@@ -61,11 +61,11 @@ class AttributeParser(HTMLParser.HTMLParser):
 
         # Force-escape ampersands, otherwise the parser will autocomplete bogus
         # entities.
-        text = re.sub(r"&(?!\S+;)", "&amp;", text)
+        text = re.sub(r'&(?!\S+;)', '&amp;', text)
 
         try:
             self.feed(text)
-            return "".join(self._string), self._attrs, ["".join(s) for s in self._fixed_strings]
+            return ''.join(self._string), self._attrs, [''.join(s) for s in self._fixed_strings]
         finally:
             self._string = None
             self._attrs = None
@@ -76,21 +76,21 @@ class AttributeParser(HTMLParser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if self._inside_fixed:
             raise Exception("Unexpected HTML tag '%s' inside a fixed string on page %s" % (tag, self._pagename))
-        elif tag == "fix":
+        elif tag == 'fix':
             self._inside_fixed = True
             self._fixed_strings.append([])
         elif tag in self._whitelist:
             self._attrs.setdefault(tag, []).append(attrs)
-            self._string.append("<%s>" % tag)
+            self._string.append('<%s>' % tag)
         else:
             raise Exception("Unexpected HTML tag '%s' in localizable string on page %s" % (tag, self._pagename))
 
     def handle_endtag(self, tag):
-        if tag == "fix":
-            self._string.append("{%d}" % len(self._fixed_strings))
+        if tag == 'fix':
+            self._string.append('{%d}' % len(self._fixed_strings))
             self._inside_fixed = False
         else:
-            self._string.append("</%s>" % tag)
+            self._string.append('</%s>' % tag)
 
     def _append_text(self, s):
         if self._inside_fixed:
@@ -104,18 +104,18 @@ class AttributeParser(HTMLParser.HTMLParser):
         self._append_text(data)
 
     def handle_entityref(self, name):
-        self._append_text(self.unescape("&%s;" % name))
+        self._append_text(self.unescape('&%s;' % name))
 
     def handle_charref(self, name):
-        self._append_text(self.unescape("&#%s;" % name))
+        self._append_text(self.unescape('&#%s;' % name))
 
 
 class Converter:
-    whitelist = {"a", "em", "sup", "strong", "code", "span"}
+    whitelist = {'a', 'em', 'sup', 'strong', 'code', 'span'}
     missing_translations = 0
     total_translations = 0
 
-    def __init__(self, params, key="pagedata"):
+    def __init__(self, params, key='pagedata'):
         self._params = params
         self._key = key
         self._attribute_parser = AttributeParser(self.whitelist)
@@ -125,16 +125,16 @@ class Converter:
         data, filename = params[key]
         lines = data.splitlines(True)
         for i, line in enumerate(lines):
-            if not re.search(r"^\s*[\w\-]+\s*=", line):
+            if not re.search(r'^\s*[\w\-]+\s*=', line):
                 break
-            name, value = line.split("=", 1)
+            name, value = line.split('=', 1)
             params[name.strip()] = value.strip()
-            lines[i] = "\n"
-        params[key] = ("".join(lines), filename)
+            lines[i] = '\n'
+        params[key] = (''.join(lines), filename)
 
     def localize_string(self, page, name, default, comment, localedata, escapes):
         def escape(s):
-            return re.sub(r".",
+            return re.sub(r'.',
                           lambda match: escapes.get(match.group(0), match.group(0)),
                           s, flags=re.S)
 
@@ -148,15 +148,15 @@ class Converter:
             try:
                 default, comment = self._seen_defaults[(page, name)]
             except KeyError:
-                raise Exception("Text not yet defined for string %s on page %s" %
+                raise Exception('Text not yet defined for string %s on page %s' %
                                 (name, page))
 
         # Extract tag attributes from default string
-        default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params["page"])
+        default, saved_attributes, fixed_strings = self._attribute_parser.parse(default, self._params['page'])
 
         # Get translation
-        locale = self._params["locale"]
-        if locale == self._params["defaultlocale"]:
+        locale = self._params['locale']
+        if locale == self._params['defaultlocale']:
             result = default
         elif name in localedata:
             result = localedata[name].strip()
@@ -166,13 +166,13 @@ class Converter:
         self.total_translations += 1
 
         # Perform callback with the string if required, e.g. for the translations script
-        callback = self._params["localized_string_callback"]
+        callback = self._params['localized_string_callback']
         if callback:
             callback(page, locale, name, result, comment, fixed_strings)
 
         # Insert fixed strings
         for i, fixed_string in enumerate(fixed_strings, 1):
-            result = result.replace("{%d}" % i, fixed_string)
+            result = result.replace('{%d}' % i, fixed_string)
 
         # Insert attributes
         result = escape(result)
@@ -184,28 +184,28 @@ class Converter:
             )
 
         for tag in self.whitelist:
-            allowed_contents = "(?:[^<>]|%s)" % "|".join((
-                "<(?:%s[^<>]*?|/%s)>" % (t, t)
+            allowed_contents = '(?:[^<>]|%s)' % '|'.join((
+                '<(?:%s[^<>]*?|/%s)>' % (t, t)
                 for t in map(re.escape, self.whitelist - {tag})
             ))
             saved = saved_attributes.get(tag, [])
             for attrs in saved:
                 attrs = map(stringify_attribute, attrs)
                 result = re.sub(
-                    r"%s(%s*?)%s" % (re_escape("<%s>" % tag), allowed_contents,
-                                     re_escape("</%s>" % tag)),
+                    r'%s(%s*?)%s' % (re_escape('<%s>' % tag), allowed_contents,
+                                     re_escape('</%s>' % tag)),
                     lambda match: r'<%s%s>%s</%s>' % (
                         tag,
-                        " " + " ".join(attrs) if attrs else "",
+                        ' ' + ' '.join(attrs) if attrs else '',
                         match.group(1),
                         tag
                     ),
                     result, 1, flags=re.S
                 )
             result = re.sub(
-                r"%s(%s*?)%s" % (re_escape("<%s>" % tag), allowed_contents,
-                                 re_escape("</%s>" % tag)),
-                r"<%s>\1</%s>" % (tag, tag),
+                r'%s(%s*?)%s' % (re_escape('<%s>' % tag), allowed_contents,
+                                 re_escape('</%s>' % tag)),
+                r'<%s>\1</%s>' % (tag, tag),
                 result, flags=re.S
             )
         return result
@@ -215,19 +215,19 @@ class Converter:
             name, comment, default = match.groups()
             if default:
                 default = to_html(default).strip()
-            return self.localize_string(self._params["page"], name, default,
-                                        comment, self._params["localedata"], escapes)
+            return self.localize_string(self._params['page'], name, default,
+                                        comment, self._params['localedata'], escapes)
 
         return re.sub(
-            r"{{\s*"
-            r"([\w\-]+)"  # String ID
-            r"(?:(?:\[(.*?)\])?"  # Optional comment
-            r"\s+"
-            r"((?:(?!{{).|"  # Translatable text
-            r"{{(?:(?!}}).)*}}"  # Nested translation
-            r")*?)"
-            r")?"
-            r"}}",
+            r'{{\s*'
+            r'([\w\-]+)'  # String ID
+            r'(?:(?:\[(.*?)\])?'  # Optional comment
+            r'\s+'
+            r'((?:(?!{{).|'  # Translatable text
+            r'{{(?:(?!}}).)*}}'  # Nested translation
+            r')*?)'
+            r')?'
+            r'}}',
             lookup_string,
             text,
             flags=re.S
@@ -238,16 +238,16 @@ class Converter:
             pre, attr, url, post = match.groups()
             url = jinja2.Markup(url).unescape()
 
-            locale, new_url = self._params["source"].resolve_link(url, self._params["locale"])
+            locale, new_url = self._params['source'].resolve_link(url, self._params['locale'])
             if new_url != None:
                 url = new_url
-                if attr == "href":
+                if attr == 'href':
                     post += ' hreflang="%s"' % jinja2.Markup.escape(locale)
 
-            return "".join((pre, jinja2.Markup.escape(url), post))
+            return ''.join((pre, jinja2.Markup.escape(url), post))
 
-        text = re.sub(r"(<a\s[^<>]*\b(href)=\")([^<>\"]+)(\")", process_link, text)
-        text = re.sub(r"(<img\s[^<>]*\b(src)=\")([^<>\"]+)(\")", process_link, text)
+        text = re.sub(r'(<a\s[^<>]*\b(href)=\")([^<>\"]+)(\")', process_link, text)
+        text = re.sub(r'(<img\s[^<>]*\b(src)=\")([^<>\"]+)(\")', process_link, text)
         return text
 
     include_start_regex = '<'
@@ -258,14 +258,14 @@ class Converter:
             global converters
             name = match.group(1)
             for format, converter_class in converters.iteritems():
-                if self._params["source"].has_include(name, format):
-                    self._params["includedata"] = self._params["source"].read_include(name, format)
-                    converter = converter_class(self._params, key="includedata")
+                if self._params['source'].has_include(name, format):
+                    self._params['includedata'] = self._params['source'].read_include(name, format)
+                    converter = converter_class(self._params, key='includedata')
                     result = converter()
                     self.missing_translations += converter.missing_translations
                     self.total_translations += converter.total_translations
                     return result
-            raise Exception("Failed to resolve include %s on page %s" % (name, self._params["page"]))
+            raise Exception('Failed to resolve include %s on page %s' % (name, self._params['page']))
 
         return re.sub(
             r'%s\?\s*include\s+([^\s<>"]+)\s*\?%s' % (
@@ -279,14 +279,14 @@ class Converter:
     def __call__(self):
         result = self.get_html(*self._params[self._key])
         result = self.resolve_includes(result)
-        if self._key == "pagedata":
+        if self._key == 'pagedata':
             head = []
 
             def add_to_head(match):
                 head.append(match.group(1))
-                return ""
-            body = re.sub(r"<head>(.*?)</head>", add_to_head, result, flags=re.S)
-            return "".join(head), body
+                return ''
+            body = re.sub(r'<head>(.*?)</head>', add_to_head, result, flags=re.S)
+            return ''.join(head), body
         else:
             return result
 
@@ -318,19 +318,19 @@ class MarkdownConverter(Converter):
 
         escapes = {}
         for char in markdown.Markdown.ESCAPED_CHARS:
-            escapes[char] = "&#" + str(ord(char)) + ";"
+            escapes[char] = '&#' + str(ord(char)) + ';'
         for key, value in html_escapes.iteritems():
             escapes[key] = value
 
-        md = markdown.Markdown(output="html5", extensions=["extra"])
-        md.preprocessors["html_block"].markdown_in_raw = True
+        md = markdown.Markdown(output='html5', extensions=['extra'])
+        md.preprocessors['html_block'].markdown_in_raw = True
 
         def to_html(s):
             return re.sub(r'</?p>', '', md.convert(s))
 
         result = self.insert_localized_strings(source, escapes, to_html)
         result = md.convert(result)
-        result = re.sub(r"&#(\d+);", remove_unnecessary_entities, result)
+        result = re.sub(r'&#(\d+);', remove_unnecessary_entities, result)
         result = self.process_links(result)
         return result
 
@@ -341,7 +341,7 @@ class SourceTemplateLoader(jinja2.BaseLoader):
 
     def get_source(self, environment, template):
         try:
-            result = self.source.read_file(template + ".tmpl")
+            result = self.source.read_file(template + '.tmpl')
         except Exception:
             raise jinja2.TemplateNotFound(template)
         return result + (None,)
@@ -352,32 +352,32 @@ class TemplateConverter(Converter):
         Converter.__init__(self, *args, **kwargs)
 
         filters = {
-            "translate": self.translate,
-            "linkify": self.linkify,
-            "toclist": self.toclist,
+            'translate': self.translate,
+            'linkify': self.linkify,
+            'toclist': self.toclist,
         }
 
         globals = {
-            "get_string": self.get_string,
-            "get_page_content": self.get_page_content,
+            'get_string': self.get_string,
+            'get_page_content': self.get_page_content,
         }
 
-        for dirname, dictionary in [("filters", filters), ("globals", globals)]:
-            for filename in self._params["source"].list_files(dirname):
+        for dirname, dictionary in [('filters', filters), ('globals', globals)]:
+            for filename in self._params['source'].list_files(dirname):
                 root, ext = os.path.splitext(filename)
-                if ext.lower() != ".py":
+                if ext.lower() != '.py':
                     continue
 
-                path = "%s/%s" % (dirname, filename)
-                namespace = self._params["source"].exec_file(path)
+                path = '%s/%s' % (dirname, filename)
+                namespace = self._params['source'].exec_file(path)
 
                 name = os.path.basename(root)
                 try:
                     dictionary[name] = namespace[name]
                 except KeyError:
-                    raise Exception("Expected symbol %r not found in %r" % (name, path))
+                    raise Exception('Expected symbol %r not found in %r' % (name, path))
 
-        self._env = jinja2.Environment(loader=SourceTemplateLoader(self._params["source"]), autoescape=True)
+        self._env = jinja2.Environment(loader=SourceTemplateLoader(self._params['source']), autoescape=True)
         self._env.filters.update(filters)
         self._env.globals.update(globals)
 
@@ -392,7 +392,7 @@ class TemplateConverter(Converter):
             env.handle_exception()
 
         for key, value in module.__dict__.iteritems():
-            if not key.startswith("_"):
+            if not key.startswith('_'):
                 self._params[key] = value
 
         result = unicode(module)
@@ -401,32 +401,32 @@ class TemplateConverter(Converter):
 
     def translate(self, default, name, comment=None):
         return jinja2.Markup(self.localize_string(
-            self._params["page"], name, default, comment,
-            self._params["localedata"], html_escapes
+            self._params['page'], name, default, comment,
+            self._params['localedata'], html_escapes
         ))
 
     def get_string(self, name, page=None):
         if page is None:
-            page = self._params["page"]
+            page = self._params['page']
 
-        localedata = self._params["source"].read_locale(self._params["locale"], page)
+        localedata = self._params['source'].read_locale(self._params['locale'], page)
         default = localedata[name]
         return jinja2.Markup(self.localize_string(
-            page, name, default, "", localedata, html_escapes
+            page, name, default, '', localedata, html_escapes
         ))
 
     def get_page_content(self, page, locale=None):
         from cms.utils import get_page_params
 
         if locale is None:
-            locale = self._params["locale"]
-        return get_page_params(self._params["source"], locale, page)
+            locale = self._params['locale']
+        return get_page_params(self._params['source'], locale, page)
 
     def linkify(self, page, locale=None, **attrs):
         if locale is None:
-            locale = self._params["locale"]
+            locale = self._params['locale']
 
-        locale, url = self._params["source"].resolve_link(page, locale)
+        locale, url = self._params['source'].resolve_link(page, locale)
         return jinja2.Markup('<a%s>' % ''.join(
             ' %s="%s"' % (name, jinja2.escape(value)) for name, value in [
                 ('href', url),
@@ -438,23 +438,23 @@ class TemplateConverter(Converter):
         flat = []
         for match in re.finditer(r'<h(\d)\s[^<>]*\bid="([^<>"]+)"[^<>]*>(.*?)</h\1>', content, re.S):
             flat.append({
-                "level": int(match.group(1)),
-                "anchor": jinja2.Markup(match.group(2)).unescape(),
-                "title": jinja2.Markup(match.group(3)).unescape(),
-                "subitems": [],
+                'level': int(match.group(1)),
+                'anchor': jinja2.Markup(match.group(2)).unescape(),
+                'title': jinja2.Markup(match.group(3)).unescape(),
+                'subitems': [],
             })
 
         structured = []
-        stack = [{"level": 0, "subitems": structured}]
+        stack = [{'level': 0, 'subitems': structured}]
         for item in flat:
-            while stack[-1]["level"] >= item["level"]:
+            while stack[-1]['level'] >= item['level']:
                 stack.pop()
-            stack[-1]["subitems"].append(item)
+            stack[-1]['subitems'].append(item)
             stack.append(item)
         return structured
 
 converters = {
-    "html": RawConverter,
-    "md": MarkdownConverter,
-    "tmpl": TemplateConverter,
+    'html': RawConverter,
+    'md': MarkdownConverter,
+    'tmpl': TemplateConverter,
 }

@@ -43,15 +43,15 @@ def generate_pages(repo, output_dir):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
-        encoding = None if binary else "utf-8"
+        encoding = None if binary else 'utf-8'
         outfile = os.path.join(output_dir, *path_parts)
         if outfile in known_files:
-            logging.warning("File %s has multiple sources", outfile)
+            logging.warning('File %s has multiple sources', outfile)
             return
         known_files.add(outfile)
 
         if os.path.exists(outfile):
-            with codecs.open(outfile, "rb", encoding=encoding) as handle:
+            with codecs.open(outfile, 'rb', encoding=encoding) as handle:
                 if handle.read() == contents:
                     return
 
@@ -61,7 +61,7 @@ def generate_pages(repo, output_dir):
             if e.errno != errno.EEXIST:
                 raise
 
-        with codecs.open(outfile, "wb", encoding=encoding) as handle:
+        with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
 
     with MercurialSource(repo) as source:
@@ -75,7 +75,7 @@ def generate_pages(repo, output_dir):
         source.exec_file = memoize(source.exec_file)
 
         config = source.read_config()
-        defaultlocale = config.get("general", "defaultlocale")
+        defaultlocale = config.get('general', 'defaultlocale')
         locales = list(source.list_locales())
         if defaultlocale not in locales:
             locales.append(defaultlocale)
@@ -83,7 +83,7 @@ def generate_pages(repo, output_dir):
         # First pass: compile the list of pages with given translation level
         def get_locale_file(page):
             try:
-                return config.get("locale_overrides", page)
+                return config.get('locale_overrides', page)
             except ConfigParser.Error:
                 return page
 
@@ -95,7 +95,7 @@ def generate_pages(repo, output_dir):
                     pagelist.add((locale, page))
                 else:
                     params = get_page_params(source, locale, page, format)
-                    if params["translation_ratio"] >= MIN_TRANSLATED:
+                    if params['translation_ratio'] >= MIN_TRANSLATED:
                         pagelist.add((locale, page))
                     else:
                         blacklist.add((locale, get_locale_file(page)))
@@ -116,20 +116,20 @@ def generate_pages(repo, output_dir):
             pagedata = process_page(source, locale, page)
 
             # Make sure links to static files are versioned
-            pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
-            pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
-            pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r"\1?%s" % source.version, pagedata)
+            pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
+            pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
+            pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
 
-            write_file([locale] + page.split("/"), pagedata)
+            write_file([locale] + page.split('/'), pagedata)
 
         for filename in source.list_localizable_files():
             for locale in locales:
                 if source.has_localizable_file(locale, filename):
                     filedata = source.read_localizable_file(locale, filename)
-                    write_file([locale] + filename.split("/"), filedata, binary=True)
+                    write_file([locale] + filename.split('/'), filedata, binary=True)
 
         for filename in source.list_static():
-            write_file(filename.split("/"), source.read_static(filename), binary=True)
+            write_file(filename.split('/'), source.read_static(filename), binary=True)
 
     def remove_unknown(dir):
         files = os.listdir(dir)
@@ -143,9 +143,9 @@ def generate_pages(repo, output_dir):
                     os.rmdir(path)
     remove_unknown(output_dir)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print >>sys.stderr, "Usage: %s source_repository output_dir" % sys.argv[0]
+        print >>sys.stderr, 'Usage: %s source_repository output_dir' % sys.argv[0]
         sys.exit(1)
 
     repo, output_dir = sys.argv[1:3]

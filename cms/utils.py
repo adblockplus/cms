@@ -24,42 +24,42 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
             if source.has_page(page, format):
                 break
         else:
-            format = "md"
+            format = 'md'
 
     params = {
-        "source": source,
-        "template": "default",
-        "locale": locale,
-        "page": page,
-        "pagedata": source.read_page(page, format),
-        "config": source.read_config(),
-        "localized_string_callback": localized_string_callback,
+        'source': source,
+        'template': 'default',
+        'locale': locale,
+        'page': page,
+        'pagedata': source.read_page(page, format),
+        'config': source.read_config(),
+        'localized_string_callback': localized_string_callback,
     }
 
     localefile = page
-    if params["config"].has_option("locale_overrides", page):
-        localefile = params["config"].get("locale_overrides", page)
-    params["localedata"] = source.read_locale(params["locale"], localefile)
+    if params['config'].has_option('locale_overrides', page):
+        localefile = params['config'].get('locale_overrides', page)
+    params['localedata'] = source.read_locale(params['locale'], localefile)
 
-    if params["config"].has_option("general", "siteurl"):
+    if params['config'].has_option('general', 'siteurl'):
         if site_url_override:
-            params["site_url"] = site_url_override
+            params['site_url'] = site_url_override
         else:
-            params["site_url"] = params["config"].get("general", "siteurl")
+            params['site_url'] = params['config'].get('general', 'siteurl')
 
     try:
         converter_class = converters[format]
     except KeyError:
-        raise Exception("Page %s uses unknown format %s" % (page, format))
+        raise Exception('Page %s uses unknown format %s' % (page, format))
 
     converter = converter_class(params)
 
     # Note: The converter might change some parameters so we can only read in
     # template data here.
-    params["templatedata"] = source.read_template(params["template"])
+    params['templatedata'] = source.read_template(params['template'])
 
-    defaultlocale = params["config"].get("general", "defaultlocale")
-    params["defaultlocale"] = defaultlocale
+    defaultlocale = params['config'].get('general', 'defaultlocale')
+    params['defaultlocale'] = defaultlocale
 
     locales = [
         l
@@ -69,15 +69,15 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
     if defaultlocale not in locales:
         locales.append(defaultlocale)
     locales.sort()
-    params["available_locales"] = locales
+    params['available_locales'] = locales
 
-    params["head"], params["body"] = converter()
+    params['head'], params['body'] = converter()
     if converter.total_translations > 0:
-        params["translation_ratio"] = (
+        params['translation_ratio'] = (
             1 - float(converter.missing_translations) / converter.total_translations
         )
     else:
-        params["translation_ratio"] = 1
+        params['translation_ratio'] = 1
 
     return params
 
@@ -87,5 +87,5 @@ def process_page(source, locale, page, format=None, site_url_override=None,
     return TemplateConverter(
         get_page_params(source, locale, page, format,
                         site_url_override, localized_string_callback),
-        key="templatedata"
+        key='templatedata'
     )()
