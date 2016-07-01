@@ -206,7 +206,7 @@ class Source:
 class MercurialSource(Source):
     def __init__(self, repo):
         command = ['hg', '-R', repo, 'archive', '-r', 'default',
-                   '-t', 'uzip', '-p', '.', '-']
+                   '-t', 'uzip', '-p', 'root', '-']
         data = subprocess.check_output(command)
         self._archive = zipfile.ZipFile(StringIO(data), mode='r')
 
@@ -227,19 +227,19 @@ class MercurialSource(Source):
 
     def has_file(self, filename):
         try:
-            self._archive.getinfo('./%s' % filename)
+            self._archive.getinfo('root/' + filename)
         except KeyError:
             return False
         return True
 
     def read_file(self, filename, binary=False):
-        data = self._archive.read('./%s' % filename)
+        data = self._archive.read('root/' + filename)
         if not binary:
             data = data.decode('utf-8')
         return (data, '%s!%s' % (self._name, filename))
 
     def list_files(self, subdir):
-        prefix = './%s/' % subdir
+        prefix = 'root/{}/'.format(subdir)
         for filename in self._archive.namelist():
             if filename.startswith(prefix):
                 yield filename[len(prefix):]
