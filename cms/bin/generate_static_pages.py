@@ -57,7 +57,7 @@ def generate_pages(repo, output_dir):
 
         try:
             os.makedirs(os.path.dirname(outfile))
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
 

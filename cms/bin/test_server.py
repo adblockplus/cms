@@ -160,7 +160,7 @@ if __name__ == '__main__':
             def wrapper(environ, start_response):
                 try:
                     return app(environ, start_response)
-                except Exception, e:
+                except Exception as e:
                     return show_error(start_response, '500 Internal Server Error',
                                       uri=environ.get('PATH_INFO'), error=e)
 
