@@ -1,13 +1,12 @@
 import os
 import sys
-import shutil
 import time
 import runpy
+import signal
 import pytest
 import urllib2
 import subprocess
-
-ROOTPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from conftest import ROOTPATH
 
 
 def get_dir_contents(path):
@@ -27,17 +26,6 @@ expected_outputs = get_expected_outputs()
 
 
 @pytest.fixture(scope='session')
-def temp_site(tmpdir_factory):
-    out_dir = tmpdir_factory.mktemp('temp_out')
-    site_dir = out_dir.join('test_site').strpath
-
-    shutil.copytree(os.path.join(ROOTPATH, 'tests', 'test_site'), site_dir)
-    subprocess.check_call(['hg', 'init', site_dir])
-    subprocess.check_call(['hg', '-R', site_dir, 'commit', '-A', '-m', 'foo'])
-    return site_dir
-
-
-@pytest.fixture(scope='session')
 def static_output(request, temp_site):
     static_out_path = os.path.join(temp_site, 'static_out')
     sys.argv = ['filler', temp_site, static_out_path]
@@ -45,12 +33,17 @@ def static_output(request, temp_site):
     return static_out_path
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture()
 def dynamic_server(temp_site):
-    p = subprocess.Popen(['python', 'runserver.py', temp_site])
+    args = ['python', 'runserver.py', temp_site]
+    # Werkzeug is a dependency of flask which we are using for the mock api
+    # however there is an issue with Werkzeug that prevents it from properly
+    # handling the SIGTERM sent by p.kill() or terminate()
+    # Issue: https://github.com/pallets/werkzeug/issues/58
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid)
     time.sleep(0.5)
     yield 'http://localhost:5000/root/'
-    p.terminate()
+    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
 
 
 @pytest.fixture(scope='session')
