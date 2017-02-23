@@ -317,12 +317,12 @@ class MarkdownConverter(Converter):
                 return char
 
         escapes = {}
-        for char in markdown.Markdown.ESCAPED_CHARS:
+        md = markdown.Markdown(output='html5', extensions=['extra'])
+        for char in md.ESCAPED_CHARS:
             escapes[char] = '&#' + str(ord(char)) + ';'
         for key, value in html_escapes.iteritems():
             escapes[key] = value
 
-        md = markdown.Markdown(output='html5', extensions=['extra'])
         md.preprocessors['html_block'].markdown_in_raw = True
 
         def to_html(s):
