@@ -33,6 +33,10 @@ class Source:
             # Not a page link
             return None, None
 
+        if url.startswith('tel:'):
+            # Workaround for 'tel' scheme not recognized in Python <=2.7.3.
+            return None, None
+
         if page == '' and url != '':
             # Page-relative link
             return None, None
