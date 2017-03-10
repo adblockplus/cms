@@ -277,7 +277,7 @@ class Converter:
             for format_, converter_class in converters.iteritems():
                 if self._params['source'].has_include(name, format_):
                     self._params['includedata'] = (
-                        self._params['source'].read_include(name, format))
+                        self._params['source'].read_include(name, format_))
 
                     converter = converter_class(self._params,
                                                 key='includedata')
