@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 import os
 import HTMLParser
 import re
@@ -77,20 +79,20 @@ class AttributeParser(HTMLParser.HTMLParser):
     def handle_starttag(self, tag, attrs):
         if self._inside_fixed:
             raise Exception("Unexpected HTML tag '{}' inside a fixed string"
-                            'on page {}'.format(tag, self._pagename))
-        if tag == 'fix':
+                            ' on page {}'.format(tag, self._pagename))
+        elif tag == 'fix':
             self._inside_fixed = True
             self._fixed_strings.append([])
-        if tag in self._whitelist:
+        elif tag in self._whitelist:
             self._attrs.setdefault(tag, []).append(attrs)
             self._string.append('<{}>'.format(tag))
         else:
             raise Exception("Unexpected HTML tag '{}' inside a fixed string"
-                            'on page {}'.format(tag, self._pagename))
+                            ' on page {}'.format(tag, self._pagename))
 
     def handle_endtag(self, tag):
         if tag == 'fix':
-            self._string.append('{{{}}}'.format(self._fixed_strings))
+            self._string.append('{{{}}}'.format(len(self._fixed_strings)))
             self._inside_fixed = False
         else:
             self._string.append('</{}>'.format(tag))
@@ -156,7 +158,7 @@ class Converter:
                 default, comment = self._seen_defaults[(page, name)]
             except KeyError:
                 raise Exception('Text not yet defined for string {} on page'
-                                '{}'.format(name, page))
+                                ' {}'.format(name, page))
 
         # Extract tag attributes from default string
         default, saved_attributes, fixed_strings = (
@@ -181,7 +183,7 @@ class Converter:
 
         # Insert fixed strings
         for i, fixed_string in enumerate(fixed_strings, 1):
-            result = result.replace('{{{%d}}}'.format(i), fixed_string)
+            result = result.replace('{{{}}}'.format(i), fixed_string)
 
         # Insert attributes
         result = escape(result)
@@ -193,10 +195,10 @@ class Converter:
             )
 
         for tag in self.whitelist:
-            allowed_contents = '(?:[^<>]|{})'.format('|').join((
+            allowed_contents = '(?:[^<>]|{})'.format('|'.join((
                 '<(?:{}[^<>]*?|/{})>'.format(t, t)
                 for t in map(re.escape, self.whitelist - {tag})
-            ))
+            )))
             saved = saved_attributes.get(tag, [])
             for attrs in saved:
                 attrs = map(stringify_attribute, attrs)
@@ -286,7 +288,7 @@ class Converter:
                     self.total_translations += converter.total_translations
                     return result
             raise Exception('Failed to resolve include {}'
-                            'on page {}'.format(name, self._params['page']))
+                            ' on page {}'.format(name, self._params['page']))
 
         return re.sub(
             r'{}\?\s*include\s+([^\s<>"]+)\s*\?{}'.format(
@@ -397,7 +399,7 @@ class TemplateConverter(Converter):
                     dictionary[name] = namespace[name]
                 except KeyError:
                     raise Exception('Expected symbol {} not found'
-                                    'in {}'.format(name, path))
+                                    ' in {}'.format(name, path))
 
         self._env = jinja2.Environment(
             loader=SourceTemplateLoader(self._params['source']),
