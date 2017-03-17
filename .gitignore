@@ -1,5 +1,7 @@
 /build/
 /dist/
 /.tox/
+/.coverage
 *.pyc
 *.pyo
+htmlcov/

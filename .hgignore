@@ -1,6 +1,8 @@
 ^build$
 ^dist$
 ^.tox$
+^htmlcov$
+^.coverage$
 
 syntax: glob
 *.pyc
