@@ -13,13 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import os
 import re
 import errno
 import codecs
 import ConfigParser
 import logging
+from argparse import ArgumentParser
 
 from cms.utils import get_page_params, process_page
 from cms.sources import MercurialSource
@@ -39,7 +39,7 @@ def memoize(func):
     return wrapper
 
 
-def generate_pages(repo, output_dir):
+def generate_pages(repo, output_dir, revision):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
@@ -64,7 +64,7 @@ def generate_pages(repo, output_dir):
         with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
 
-    with MercurialSource(repo) as source:
+    with MercurialSource(repo, revision) as source:
         # Cache the result for some functions - we can assume here that the data
         # never changes
         source.resolve_link = memoize(source.resolve_link)
@@ -144,9 +144,12 @@ def generate_pages(repo, output_dir):
     remove_unknown(output_dir)
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print >>sys.stderr, 'Usage: %s source_repository output_dir' % sys.argv[0]
-        sys.exit(1)
-
-    repo, output_dir = sys.argv[1:3]
-    generate_pages(repo, output_dir)
+    parser = ArgumentParser('Convert website source to static website')
+    parser.add_argument('-r', '--rev',
+                        help=('Specify which revision to generate from. '
+                              'See "hg help revisions" for details.'),
+                        default='default')
+    parser.add_argument('source', help="Path to website's repository")
+    parser.add_argument('output', help='Path to desired output directory')
+    args = parser.parse_args()
+    generate_pages(args.source, args.output, args.rev)

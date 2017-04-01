@@ -15,4 +15,9 @@ def temp_site(tmpdir_factory):
     shutil.copytree(os.path.join(ROOTPATH, 'tests', 'test_site'), site_dir)
     subprocess.check_call(['hg', 'init', site_dir])
     subprocess.check_call(['hg', '-R', site_dir, 'commit', '-A', '-m', 'foo'])
+
+    subprocess.check_call(['hg', '-R', site_dir, 'bookmark', 'master'])
+    subprocess.check_call(['hg', '-R', site_dir, 'bookmark', 'test'])
+    subprocess.check_call(['touch', os.path.join(site_dir, 'pages', 'bar.md')])
+    subprocess.check_call(['hg', '-R', site_dir, 'commit', '-A', '-m', 'bar'])
     yield site_dir

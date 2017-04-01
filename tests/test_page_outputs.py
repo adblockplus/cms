@@ -25,10 +25,18 @@ def get_expected_outputs():
 expected_outputs = get_expected_outputs()
 
 
+@pytest.fixture(scope='session', params=['master', None])
+def revision(request):
+    return request.param
+
+
 @pytest.fixture(scope='session')
-def static_output(request, temp_site):
+def static_output(revision, request, temp_site):
     static_out_path = os.path.join(temp_site, 'static_out')
     sys.argv = ['filler', temp_site, static_out_path]
+    if revision is not None:
+        sys.argv += ['--rev', revision]
+
     runpy.run_module('cms.bin.generate_static_pages', run_name='__main__')
     return static_out_path
 
@@ -60,3 +68,10 @@ def test_static(output_pages, filename, expected_output):
 def test_dynamic(dynamic_server, filename, expected_output):
     response = urllib2.urlopen(dynamic_server + filename)
     assert response.read() == expected_output
+
+
+def test_revision_arg(revision, output_pages):
+    if revision is None:
+        assert 'bar' in output_pages
+    else:
+        assert 'bar' not in output_pages

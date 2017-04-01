@@ -208,13 +208,13 @@ class Source:
 
 
 class MercurialSource(Source):
-    def __init__(self, repo):
-        command = ['hg', '-R', repo, 'archive', '-r', 'default',
+    def __init__(self, repo, revision):
+        command = ['hg', '-R', repo, 'archive', '-r', revision,
                    '-t', 'uzip', '-p', 'root', '-']
         data = subprocess.check_output(command)
         self._archive = zipfile.ZipFile(StringIO(data), mode='r')
 
-        command = ['hg', '-R', repo, 'id', '-n', '-r', 'default']
+        command = ['hg', '-R', repo, 'id', '-n', '-r', revision]
         self.version = subprocess.check_output(command).strip()
 
         self._name = os.path.basename(repo.rstrip(os.path.sep))
