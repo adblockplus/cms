@@ -381,6 +381,7 @@ class TemplateConverter(Converter):
 
         globals = {
             'get_string': self.get_string,
+            'has_string': self.has_string,
             'get_page_content': self.get_page_content,
         }
 
@@ -406,6 +407,9 @@ class TemplateConverter(Converter):
             autoescape=True)
         self._env.filters.update(filters)
         self._env.globals.update(globals)
+
+    def _get_locale_data(self, page):
+        return self._params['source'].read_locale(self._params['locale'], page)
 
     def get_html(self, source, filename):
         env = self._env
@@ -435,12 +439,18 @@ class TemplateConverter(Converter):
         if page is None:
             page = self._params['page']
 
-        localedata = self._params['source'].read_locale(self._params['locale'],
-                                                        page)
+        localedata = self._get_locale_data(page)
         default = localedata[name]
         return jinja2.Markup(self.localize_string(
             page, name, default, '', localedata, html_escapes
         ))
+
+    def has_string(self, name, page=None):
+        if page is None:
+            page = self._params['page']
+
+        localedata = self._get_locale_data(page)
+        return name in localedata
 
     def get_page_content(self, page, locale=None):
         from cms.utils import get_page_params
