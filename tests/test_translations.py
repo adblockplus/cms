@@ -18,8 +18,8 @@ def expect_requests():
         ('upload-translation?key=test_key&json=1', 'test_sample'),
         ('delete-file?key=test_key&json=1', 'translate.json'),
         ('delete-file?key=test_key&json=1', 'translate.json'),
-        ('delete-directory?key=test_key&json=1', 'de'),
-        ('delete-directory?key=test_key&json=1', 'en'),
+        ('delete-directory?key=test_key&json=1', ''),
+        ('delete-directory?key=test_key&json=1', ''),
         ('export?key=test_key&json=1', ''),
         ('download/all.zip?key=test_key', ''),
     ]
