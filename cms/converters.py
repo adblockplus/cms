@@ -116,6 +116,22 @@ class AttributeParser(HTMLParser.HTMLParser):
         self._append_text(self.unescape('&#{};'.format(name)))
 
 
+def parse_page_content(page, data):
+    """Separate page content into metadata (dict) and body text (str)"""
+    page_data = {'page': page}
+    lines = data.splitlines(True)
+    for i, line in enumerate(lines):
+        if not re.search(r'^\s*[\w\-]+\s*=', line):
+            break
+        name, value = line.split('=', 1)
+        value = value.strip()
+        if value.startswith('[') and value.endswith(']'):
+            value = [element.strip() for element in value[1:-1].split(',')]
+        lines[i] = '\n'
+        page_data[name.strip()] = value
+    return page_data, ''.join(lines)
+
+
 class Converter:
     whitelist = {'a', 'em', 'sup', 'strong', 'code', 'span'}
     missing_translations = 0
@@ -128,15 +144,11 @@ class Converter:
         self._seen_defaults = {}
 
         # Read in any parameters specified at the beginning of the file
+        # and override converter defaults with page specific params
         data, filename = params[key]
-        lines = data.splitlines(True)
-        for i, line in enumerate(lines):
-            if not re.search(r'^\s*[\w\-]+\s*=', line):
-                break
-            name, value = line.split('=', 1)
-            params[name.strip()] = value.strip()
-            lines[i] = '\n'
-        params[key] = (''.join(lines), filename)
+        page_data, body_text = parse_page_content(params['page'], data)
+        params.update(page_data)
+        params[key] = (body_text, filename)
 
     def localize_string(
             self, page, name, default, comment, localedata, escapes):
@@ -383,6 +395,7 @@ class TemplateConverter(Converter):
             'get_string': self.get_string,
             'has_string': self.has_string,
             'get_page_content': self.get_page_content,
+            'get_pages_metadata': self.get_pages_metadata,
         }
 
         for dirname, dictionary in [('filters', filters),
@@ -470,6 +483,39 @@ class TemplateConverter(Converter):
                 ('hreflang', locale)
             ] + attrs.items()
         )))
+
+    def get_pages_metadata(self, filters=None):
+        if filters is not None and not isinstance(filters, dict):
+            raise TypeError('Filters are not a dictionary')
+
+        return_data = []
+        for page_name, _format in self._params['source'].list_pages():
+            data, filename = self._params['source'].read_page(page_name,
+                                                              _format)
+            page_data = parse_page_content(page_name, data)[0]
+            if self.filter_metadata(filters, page_data) is True:
+                return_data.append(page_data)
+        return return_data
+
+    def filter_metadata(self, filters, metadata):
+        # if only the page key is in the metadata then there
+        # was no user defined metadata
+        if metadata.keys() == ['page']:
+            return False
+        if filters is None:
+            return True
+        for filter_name, filter_value in filters.items():
+            if filter_name not in metadata:
+                return False
+            if isinstance(metadata[filter_name], list):
+                if isinstance(filter_value, basestring):
+                    filter_value = [filter_value]
+                for option in filter_value:
+                    if str(option) not in metadata[filter_name]:
+                        return False
+            elif filter_value != metadata[filter_name]:
+                    return False
+        return True
 
     def toclist(self, content):
         toc_re = r'<h(\d)\s[^<>]*\bid="([^<>"]+)"[^<>]*>(.*?)</h\1>'
