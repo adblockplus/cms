@@ -270,8 +270,9 @@ class MercurialSource(Source):
 
 
 class FileSource(Source):
-    def __init__(self, dir):
+    def __init__(self, dir, version=None):
         self._dir = dir
+        self.version = version
 
     def __enter__(self):
         return self
@@ -405,7 +406,7 @@ def _memoize(func):
     return wrapper
 
 
-def create_source(path, cached=False, revision=None):
+def create_source(path, cached=False, revision=None, version=None):
     """Create a source from path and optional revision.
 
     `cached` flag activates caching. This can be used to optimize performance
@@ -429,7 +430,7 @@ def create_source(path, cached=False, revision=None):
     if revision is not None:
         source = MercurialSource(path, revision)
     else:
-        source = FileSource(path)
+        source = FileSource(path, version=version)
 
     config = source.read_config()
     try:

@@ -19,6 +19,8 @@ import errno
 import codecs
 import ConfigParser
 import logging
+import subprocess
+
 from argparse import ArgumentParser
 
 from cms.utils import get_page_params, process_page
@@ -27,7 +29,7 @@ from cms.sources import create_source
 MIN_TRANSLATED = 0.3
 
 
-def generate_pages(repo, output_dir, revision):
+def generate_pages(repo, output_dir, revision, version):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
@@ -52,7 +54,10 @@ def generate_pages(repo, output_dir, revision):
         with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
 
-    with create_source(repo, cached=True, revision=revision) as source:
+    with create_source(repo,
+                       cached=True,
+                       revision=revision,
+                       version=version) as source:
         config = source.read_config()
         defaultlocale = config.get('general', 'defaultlocale')
         locales = list(source.list_locales())
@@ -129,7 +134,17 @@ if __name__ == '__main__':
                         help='Specify which revision to generate from. '
                              'See "hg help revisions" for details.',
                         default='default')
+    parser.add_argument('-v', '--version', default=None,
+                        help=('Specify the version string to be used if you '
+                              'generating from a FileSource. Only pass REV or '
+                              'VERSION not both'))
     parser.add_argument('source', help="Path to website's repository")
     parser.add_argument('output', help='Path to desired output directory')
     args = parser.parse_args()
-    generate_pages(args.source, args.output, args.rev)
+
+    if args.version and args.rev != 'default':
+        raise parser.error('Cannot specify rev and version at the same time')
+    elif args.version:
+        args.rev = None
+
+    generate_pages(args.source, args.output, args.rev, args.version)
