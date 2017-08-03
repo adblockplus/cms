@@ -223,8 +223,9 @@ class Source:
 
 
 class FileSource(Source):
-    def __init__(self, dir):
+    def __init__(self, dir, version=None):
         self._dir = dir
+        self.version = version
 
     def __enter__(self):
         return self
@@ -359,8 +360,8 @@ class MultiSource(Source):
             return False
 
 
-def create_source(path, cached=False):
-    """Create a source from path.
+def create_source(path, cached=False, revision=None, version=None):
+    """Create a source from path and optional revision.
 
     `cached` flag activates caching. This can be used to optimize performance
     if no changes are expected on the filesystem after the source was created.
@@ -375,7 +376,10 @@ def create_source(path, cached=False):
     provided, so the files in the additional folders will only be used if the
     original source doesn't contain that file.
     """
-    source = FileSource(path)
+    if revision is not None:
+        source = MercurialSource(path, revision)
+    else:
+        source = FileSource(path, version=version)
 
     config = source.read_config()
     try:
