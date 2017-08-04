@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 import os
 import HTMLParser
 import re
+import urlparse
 
 import jinja2
 import markdown
@@ -396,6 +397,7 @@ class TemplateConverter(Converter):
             'has_string': self.has_string,
             'get_page_content': self.get_page_content,
             'get_pages_metadata': self.get_pages_metadata,
+            'get_canonical_url': self.get_canonical_url,
         }
 
         for dirname, dictionary in [('filters', filters),
@@ -516,6 +518,22 @@ class TemplateConverter(Converter):
             elif filter_value != metadata[filter_name]:
                     return False
         return True
+
+    def get_canonical_url(self, page):
+        """Return canonical URL for the page (without locale code)"""
+        try:
+            base_url = self._params['site_url']
+        except KeyError:
+            raise Exception('You must configure `siteurl` to use'
+                            '`get_canonical_url()`')
+
+        locale, page_url = self._params['source'].resolve_link(
+            page, self._params['locale']
+        )
+        # Remove the locale component that `resolve_link` adds at the
+        # beginning.
+        page_url = page_url[len(locale) + 1:]
+        return urlparse.urljoin(base_url, page_url)
 
     def toclist(self, content):
         toc_re = r'<h(\d)\s[^<>]*\bid="([^<>"]+)"[^<>]*>(.*?)</h\1>'

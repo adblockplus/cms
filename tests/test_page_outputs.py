@@ -14,15 +14,26 @@ def get_dir_contents(path):
     for dirpath, dirnames, filenames in os.walk(path):
         for output_file in filenames:
             with open(os.path.join(dirpath, output_file)) as f:
-                return_data[output_file] = f.read()
+                return_data[output_file] = f.read().strip()
     return return_data
 
 
-def get_expected_outputs():
+def get_expected_outputs(test_type):
     expected_out_path = os.path.join(ROOTPATH, 'tests', 'expected_output')
-    return get_dir_contents(expected_out_path).items()
+    outputs = get_dir_contents(expected_out_path)
+    for filename in list(outputs):
+        # Move test-type-specific expected outputs (e.g. "xyz@static" -> "xyz")
+        # and remove the expected outputs that don't apply for this test type.
+        if filename.endswith('@' + test_type):
+            realname = filename.split('@')[0]
+            outputs[realname] = outputs[filename]
+        if '@' in filename:
+            del outputs[filename]
+    return outputs.items()
 
-expected_outputs = get_expected_outputs()
+
+static_expected_outputs = get_expected_outputs('static')
+dynamic_expected_outputs = get_expected_outputs('dynamic')
 
 
 @pytest.fixture(scope='session', params=['master', None])
@@ -50,7 +61,7 @@ def dynamic_server(temp_site):
     # Issue: https://github.com/pallets/werkzeug/issues/58
     p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid)
     time.sleep(0.5)
-    yield 'http://localhost:5000/root/'
+    yield 'http://localhost:5000/en/'
     os.killpg(os.getpgid(p.pid), signal.SIGTERM)
 
 
@@ -59,15 +70,15 @@ def output_pages(static_output):
     return get_dir_contents(static_output)
 
 
-@pytest.mark.parametrize('filename,expected_output', expected_outputs)
+@pytest.mark.parametrize('filename,expected_output', static_expected_outputs)
 def test_static(output_pages, filename, expected_output):
     assert output_pages[filename] == expected_output
 
 
-@pytest.mark.parametrize('filename,expected_output', expected_outputs)
+@pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)
 def test_dynamic(dynamic_server, filename, expected_output):
     response = urllib2.urlopen(dynamic_server + filename)
-    assert response.read() == expected_output
+    assert response.read().strip() == expected_output
 
 
 def test_revision_arg(revision, output_pages):
