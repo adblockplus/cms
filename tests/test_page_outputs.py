@@ -10,12 +10,14 @@ from conftest import ROOTPATH
 
 
 def get_dir_contents(path):
-    return_data = {}
+    dirdata = {}
     for dirpath, dirnames, filenames in os.walk(path):
         for output_file in filenames:
-            with open(os.path.join(dirpath, output_file)) as f:
-                return_data[output_file] = f.read().strip()
-    return return_data
+            filepath = os.path.join(dirpath, output_file)
+            with open(filepath) as f:
+                locale = os.path.split(os.path.split(filepath)[0])[1]
+                dirdata[os.path.join(locale, output_file)] = f.read().strip()
+    return dirdata
 
 
 def get_expected_outputs(test_type):
@@ -61,7 +63,7 @@ def dynamic_server(temp_site):
     # Issue: https://github.com/pallets/werkzeug/issues/58
     p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid)
     time.sleep(0.5)
-    yield 'http://localhost:5000/en/'
+    yield 'http://localhost:5000/'
     os.killpg(os.getpgid(p.pid), signal.SIGTERM)
 
 
@@ -83,6 +85,6 @@ def test_dynamic(dynamic_server, filename, expected_output):
 
 def test_revision_arg(revision, output_pages):
     if revision is None:
-        assert 'bar' in output_pages
+        assert 'en/bar' in output_pages
     else:
-        assert 'bar' not in output_pages
+        assert 'en/bar' not in output_pages
