@@ -122,6 +122,9 @@ def parse_page_content(page, data):
     page_data = {'page': page}
     lines = data.splitlines(True)
     for i, line in enumerate(lines):
+        if line.strip() in {'<!--', '-->'}:
+            lines[i] = ''
+            continue
         if not re.search(r'^\s*[\w\-]+\s*=', line):
             break
         name, value = line.split('=', 1)
