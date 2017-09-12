@@ -20,9 +20,9 @@ import codecs
 import ConfigParser
 import logging
 import subprocess
-import lxml.html
 
 from argparse import ArgumentParser
+from bs4 import BeautifulSoup
 
 from cms.utils import get_page_params, process_page
 from cms.sources import create_source
@@ -109,13 +109,13 @@ def generate_pages(repo, output_dir, revision, version, relative):
         for locale, page in pagelist:
             pagedata = process_page(source, locale, page)
 
-            root = lxml.html.fromstring(pagedata).getroottree()
+            root = BeautifulSoup(pagedata, 'html.parser')
 
-            expr = '//img[@src|@srcset]|//script[@src]|//link[@href]|//a[@href]'
-            for elem in root.xpath(expr):
-                if 'srcset' in elem.attrib:
+            expr = 'img[src], img[srcset], script[src], link[href]'
+            for elem in root.select(expr):
+                if 'srcset' in elem.attrs:
                     srcset = []
-                    for src_zoom in elem.attrib['srcset'].split(', '):
+                    for src_zoom in elem.attrs['srcset'].split(', '):
                         try:
                             src, zoom = src_zoom.split(' ')
                         except ValueError:
@@ -126,13 +126,14 @@ def generate_pages(repo, output_dir, revision, version, relative):
                              res = res + ' ' + zoom
                         srcset.append(res)
 
-                    elem.attrib['srcset'] = ', '.join(srcset)
+                    elem.attrs['srcset'] = ', '.join(srcset)
 
                 for key in ['src', 'href']:
-                    if key in elem.attrib:
-                        elem.attrib[key] = rewrite_link(elem.attrib[key])
+                    if key in elem.attrs:
+                        elem.attrs[key] = rewrite_link(elem.attrs[key])
 
-            pagedata = lxml.html.tostring(root, encoding='unicode')
+            pagedata = root.prettify()
+
             write_file([locale] + page.split('/'), pagedata)
 
         for filename in source.list_localizable_files():
