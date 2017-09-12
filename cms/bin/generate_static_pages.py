@@ -19,6 +19,7 @@ import codecs
 import ConfigParser
 import logging
 import subprocess
+import lxml.html
 
 from argparse import ArgumentParser
 import shutil
@@ -114,7 +115,7 @@ def is_in_previous_version(path, new_contents, encoding):
     return False
 
 
-def generate_pages(repo, output_dir, revision, version):
+def generate_pages(repo, output_dir, revision, version, relative):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
@@ -174,15 +175,43 @@ def generate_pages(repo, output_dir, revision, version):
         source.has_locale = has_locale
         source.resolve_link.cache_clear()
 
+        def rewrite_link(link):
+            if link.startswith('/'):
+                if source.version:
+                    link += '?' + source.version
+                if relative:
+                    depth = len(page.split('/'))
+                    link = '/'.join(['..'] * depth) + link
+            return link
+
         # Second pass: actually generate pages this time
         for locale, page in pagelist:
             pagedata = process_page(source, locale, page)
 
-            # Make sure links to static files are versioned
-            pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
-            pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
-            pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
+            root = lxml.html.fromstring(pagedata).getroottree()
 
+            expr = '//img[@src|@srcset]|//script[@src]|//link[@href]|//a[@href]'
+            for elem in root.xpath(expr):
+                if 'srcset' in elem.attrib:
+                    srcset = []
+                    for src_zoom in elem.attrib['srcset'].split(', '):
+                        try:
+                            src, zoom = src_zoom.split(' ')
+                        except ValueError:
+                            src = src_zoom
+                            zoom = None
+                        res = rewrite_link(src)
+                        if zoom:
+                             res = res + ' ' + zoom
+                        srcset.append(res)
+
+                    elem.attrib['srcset'] = ', '.join(srcset)
+
+                for key in ['src', 'href']:
+                    if key in elem.attrib:
+                        elem.attrib[key] = rewrite_link(elem.attrib[key])
+
+            pagedata = lxml.html.tostring(root, encoding='unicode')
             write_file([locale] + page.split('/'), pagedata)
 
         for filename in source.list_localizable_files():
@@ -217,6 +246,8 @@ if __name__ == '__main__':
                         help=('Specify the version string to be used if you '
                               'generating from a FileSource. Only pass REV or '
                               'VERSION not both'))
+
+    parser.add_argument('--relative', action='store_true', default=False)
     parser.add_argument('source', help="Path to website's repository")
     parser.add_argument('output', help='Path to desired output directory')
     args = parser.parse_args()
@@ -226,4 +257,4 @@ if __name__ == '__main__':
     elif args.version:
         args.rev = None
 
-    generate_pages(args.source, args.output, args.rev, args.version)
+    generate_pages(args.source, args.output, args.rev, args.version, args.relative)
