@@ -22,21 +22,9 @@ import logging
 from argparse import ArgumentParser
 
 from cms.utils import get_page_params, process_page
-from cms.sources import MercurialSource
+from cms.sources import create_source
 
 MIN_TRANSLATED = 0.3
-
-
-def memoize(func):
-    memoized = {}
-
-    def wrapper(*args):
-        try:
-            return memoized[args]
-        except KeyError:
-            return memoized.setdefault(args, func(*args))
-    wrapper.clear_cache = memoized.clear
-    return wrapper
 
 
 def generate_pages(repo, output_dir, revision):
@@ -64,16 +52,7 @@ def generate_pages(repo, output_dir, revision):
         with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
 
-    with MercurialSource(repo, revision) as source:
-        # Cache the result for some functions - we can assume here that the data
-        # never changes
-        source.resolve_link = memoize(source.resolve_link)
-        source.read_config = memoize(source.read_config)
-        source.read_template = memoize(source.read_template)
-        source.read_locale = memoize(source.read_locale)
-        source.read_include = memoize(source.read_include)
-        source.exec_file = memoize(source.exec_file)
-
+    with create_source(repo, cached=True, revision=revision) as source:
         config = source.read_config()
         defaultlocale = config.get('general', 'defaultlocale')
         locales = list(source.list_locales())
@@ -109,7 +88,7 @@ def generate_pages(repo, output_dir, revision):
                 return False
             return orig_has_locale(locale, page)
         source.has_locale = has_locale
-        source.resolve_link.clear_cache()
+        source.resolve_link.cache_clear()
 
         # Second pass: actually generate pages this time
         for locale, page in pagelist:

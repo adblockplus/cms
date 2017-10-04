@@ -1,23 +1,11 @@
 import os
 import sys
-import time
 import runpy
-import signal
 import pytest
 import urllib2
-import subprocess
-from conftest import ROOTPATH
 
-
-def get_dir_contents(path):
-    dirdata = {}
-    for dirpath, dirnames, filenames in os.walk(path):
-        for output_file in filenames:
-            filepath = os.path.join(dirpath, output_file)
-            with open(filepath) as f:
-                locale = os.path.split(os.path.split(filepath)[0])[1]
-                dirdata[os.path.join(locale, output_file)] = f.read().strip()
-    return dirdata
+from .conftest import ROOTPATH
+from .utils import get_dir_contents, run_test_server
 
 
 def get_expected_outputs(test_type):
@@ -54,17 +42,10 @@ def static_output(revision, request, temp_site):
     return static_out_path
 
 
-@pytest.yield_fixture()
+@pytest.fixture(scope='module')
 def dynamic_server(temp_site):
-    args = ['python', 'runserver.py', temp_site]
-    # Werkzeug is a dependency of flask which we are using for the mock api
-    # however there is an issue with Werkzeug that prevents it from properly
-    # handling the SIGTERM sent by p.kill() or terminate()
-    # Issue: https://github.com/pallets/werkzeug/issues/58
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid)
-    time.sleep(0.5)
-    yield 'http://localhost:5000/'
-    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+    with run_test_server(temp_site) as ts:
+        yield ts
 
 
 @pytest.fixture(scope='session')

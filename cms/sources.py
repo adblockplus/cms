@@ -303,3 +303,109 @@ class FileSource(Source):
 
     def get_cache_dir(self):
         return os.path.join(self._dir, 'cache')
+
+
+class MultiSource(Source):
+    """A source that combines the contents of multiple other sources."""
+
+    def __init__(self, base_sources):
+        self._bases = base_sources
+
+    @property
+    def version(self):
+        return self._bases[0].version
+
+    def get_cache_dir(self):
+        return self._bases[0].get_cache_dir()
+
+    def __enter__(self):
+        for base in self._bases:
+            base.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        return any(base.__exit__(exc_type, exc_value, tb)
+                   for base in self._bases)
+
+    def close(self):
+        for base in self._bases:
+            base.close()
+
+    def has_file(self, filename):
+        return any(base.has_file(filename) for base in self._bases)
+
+    def read_file(self, filename, binary=False):
+        for base in self._bases:
+            if base.has_file(filename):
+                return base.read_file(filename, binary)
+        raise KeyError('File not found {}'.format(filename))
+
+    def list_files(self, subdir):
+        return {f for base in self._bases for f in base.list_files(subdir)}
+
+
+def _memoize(func):
+    """Cache results of functions calls."""
+    memoized = {}
+
+    def wrapper(*args):
+        try:
+            return memoized[args]
+        except KeyError:
+            return memoized.setdefault(args, func(*args))
+    wrapper.cache_clear = memoized.clear
+    return wrapper
+
+
+def create_source(path, cached=False, revision=None):
+    """Create a source from path and optional revision.
+
+    `cached` flag activates caching. This can be used to optimize performance
+    if no changes are expected on the filesystem after the source was created.
+    This is usually the case with static generation (as opposed to dynamic
+    preview).
+
+    If `revision` option is provided, the `path` is assumed to be pointing to a
+    Mercurial repository. In this case the source will return the content of
+    selected revision (using `MercurialSource`) instead of the content of the
+    directory. Note that any local changes will be ignored in this case.
+
+    If `settings.ini` in the source contains `[paths]` section with an
+    `additional-paths` key that contains the list of additional root folders,
+    `MultiSource` will be instantiated and its bases will be the original
+    source plus an additional source for each additional root folder.
+    `MultiSource` looks up files in its base sources in the order they are
+    provided, so the files in the additional folders will only be used if the
+    original source doesn't contain that file.
+    """
+    if revision is not None:
+        source = MercurialSource(path, revision)
+    else:
+        source = FileSource(path)
+
+    config = source.read_config()
+    try:
+        ap = config.get('paths', 'additional-paths').strip()
+        additional_paths = filter(None, ap.split())
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        additional_paths = []
+
+    if additional_paths:
+        additional_sources = [
+            create_source(os.path.join(path, p))
+            for p in additional_paths
+        ]
+        source = MultiSource([source] + additional_sources)
+
+    if cached:
+        for fname in [
+            'resolve_link',
+            'read_config',
+            'read_template',
+            'read_locale',
+            'read_include',
+            'exec_file',
+        ]:
+            setattr(source, fname, _memoize(getattr(source, fname)))
+
+    return source

@@ -21,7 +21,7 @@ import argparse
 import jinja2
 
 from cms.utils import process_page
-from cms.sources import FileSource
+from cms.sources import create_source
 from cms.converters import converters
 
 source = None
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', type=int, default=5000, help='TCP port the server will listen on')
     args = parser.parse_args()
 
-    source = FileSource(args.path)
+    source = create_source(args.path)
     address = args.address
     port = args.port
 
