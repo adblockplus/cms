@@ -34,6 +34,7 @@ def isBlockLevel(tag):
         return True
     return orig_isBlockLevel(tag)
 
+
 markdown.util.isBlockLevel = isBlockLevel
 
 html_escapes = {
@@ -557,6 +558,7 @@ class TemplateConverter(Converter):
             stack[-1]['subitems'].append(item)
             stack.append(item)
         return structured
+
 
 converters = {
     'html': RawConverter,

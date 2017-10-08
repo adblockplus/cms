@@ -120,6 +120,7 @@ def handler(environ, start_response):
     start_response('200 OK', [('Content-Type', mime)])
     return [data]
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='CMS development server created to test pages locally and on-the-fly')

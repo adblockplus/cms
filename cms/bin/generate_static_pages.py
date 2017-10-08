@@ -122,6 +122,7 @@ def generate_pages(repo, output_dir, revision):
                     os.rmdir(path)
     remove_unknown(output_dir)
 
+
 if __name__ == '__main__':
     parser = ArgumentParser('Convert website source to static website')
     parser.add_argument('-r', '--rev',

@@ -325,6 +325,7 @@ def crowdin_sync(source_dir, crowdin_api_key):
     download_translations(crowdin_api, source_dir, required_locales)
     logger.info('Crowdin sync completed.')
 
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         print >>sys.stderr, 'Usage: python -m cms.bin.translate www_directory crowdin_project_api_key [logging_level]'
