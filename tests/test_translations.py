@@ -46,8 +46,7 @@ def make_intercept(scope='module'):
 
 def test_sync(temp_site, make_intercept, make_crowdin_zip, expect_requests):
     translate.crowdin_sync(temp_site, 'test_key')
-    for (url, data), (expect_url, expect_data) in zip(
-                                                      app.request_log,
+    for (url, data), (expect_url, expect_data) in zip(app.request_log,
                                                       expect_requests):
         assert expect_url in url
         assert expect_data in data
