@@ -30,6 +30,20 @@ PATHS_FRAGMENT_TEMPLATE = """
 additional-paths = {}
 """
 
+# Expected strings in CMS output:
+EXPECTATIONS = [
+    # Pages from the main site have priority.
+    ('en/filter', 'MAIN_SITE'),
+    # Lists of pages from main website and additional paths are merged.
+    ('en/map', 'sitemap'),
+    ('en/sitemap', 'map'),
+    # Pages that have same name but different extensions on main website and
+    # additional paths are handled correctly (no conflict and main website
+    # should have priority, see https://issues.adblockplus.org/ticket/5862)
+    ('en/global', 'MAIN_SITE'),
+    ('en/translate', 'MAIN_SITE'),
+]
+
 
 @pytest.fixture(scope='session')
 def ap_site(temp_site, tmpdir_factory):
@@ -44,8 +58,8 @@ def ap_site(temp_site, tmpdir_factory):
     )
 
     pages = ap_root.mkdir('pages')
-    pages.join('filter.tmpl').write(base_pages.join('filter.tmpl').read() +
-                                    'MARKER')
+    for file_name in ['filter.tmpl', 'global.md', 'translate.tmpl']:
+        pages.join(file_name).write('template=empty\n\nMAIN_SITE')
     pages.join('map.tmpl').write(base_pages.join('sitemap.tmpl').read())
 
     subprocess.check_call(['hg', 'init', ap_root.strpath])
@@ -62,26 +76,26 @@ def ap_static_output(tmpdir_factory, ap_site):
     saved_argv = sys.argv
     sys.argv = ['', ap_site.strpath, out_path.strpath]
     runpy.run_module('cms.bin.generate_static_pages', run_name='__main__')
-    yield out_path
+    yield get_dir_contents(out_path.strpath)
     sys.argv = saved_argv
-
-
-def test_ap_static(ap_static_output):
-    outfiles = get_dir_contents(ap_static_output.strpath)
-    assert outfiles['en/filter'].endswith('MARKER')  # We can override pages.
-    assert 'sitemap' in outfiles['en/map']           # The lists of pages are
-    assert 'map' in outfiles['en/sitemap']           # merged.
 
 
 @pytest.fixture(scope='module')
 def dynamic_server(ap_site):
+    """Run CMS test server and returns its URL."""
     with run_test_server(ap_site.strpath) as ts:
         yield ts
 
 
-def test_dynamic(dynamic_server):
-    response = urllib2.urlopen(dynamic_server + 'en/filter')
-    assert response.read().endswith('MARKER')
+@pytest.mark.parametrize('page_name,expectation', EXPECTATIONS)
+def test_ap_static(ap_static_output, page_name, expectation):
+    assert expectation in ap_static_output[page_name]
+
+
+@pytest.mark.parametrize('page_name,expectation', EXPECTATIONS)
+def test_dynamic(dynamic_server, page_name, expectation):
+    response = urllib2.urlopen(dynamic_server + page_name)
+    assert expectation in response.read()
 
 
 def test_create_source(tmpdir):

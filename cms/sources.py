@@ -343,6 +343,38 @@ class MultiSource(Source):
     def list_files(self, subdir):
         return {f for base in self._bases for f in base.list_files(subdir)}
 
+    def list_pages(self):
+        # We can't let the base class implementation of `list_pages` handle
+        # this on top of `list_files` because the same page can have multiple
+        # possible source files. When those source files reside in different
+        # base sources, only the first of them should be visible. Possible
+        # source files of the page in later sources should be shadowed to avoid
+        # unexpected conflicts.
+        all_seen = set()
+        for base in self._bases:
+            base_seen = set()
+            for page, ext in base.list_pages():
+                if page not in all_seen:
+                    yield page, ext
+                    base_seen.add(page)
+            all_seen.update(base_seen)
+
+    def has_page(self, page, format=None):
+        # This function has to behave consistently with `list_pages` so we must
+        # check if the page (in any format) exists in earlier bases before we
+        # check later ones.
+        for base in self._bases:
+            if base.has_page(page):
+                if format is None:
+                    return True
+                # If a page exists in an earlier base in another format than
+                # requested, it will shadow the same page in later bases.
+                # Therefore, as as soon as we find a base that has the page in
+                # any format, we can delegate to it completely.
+                return base.has_page(page, format)
+        else:
+            return False
+
 
 def _memoize(func):
     """Cache results of functions calls."""
