@@ -23,6 +23,7 @@ import urlparse
 import jinja2
 import markdown
 
+from cms import utils
 
 # Monkey-patch Markdown's isBlockLevel function to ensure that no paragraphs
 # are inserted into the <head> tag
@@ -118,42 +119,17 @@ class AttributeParser(HTMLParser.HTMLParser):
         self._append_text(self.unescape('&#{};'.format(name)))
 
 
-def parse_page_content(page, data):
-    """Separate page content into metadata (dict) and body text (str)"""
-    page_data = {'page': page}
-    lines = data.splitlines(True)
-    for i, line in enumerate(lines):
-        if line.strip() in {'<!--', '-->'}:
-            lines[i] = ''
-            continue
-        if not re.search(r'^\s*[\w\-]+\s*=', line):
-            break
-        name, value = line.split('=', 1)
-        value = value.strip()
-        if value.startswith('[') and value.endswith(']'):
-            value = [element.strip() for element in value[1:-1].split(',')]
-        lines[i] = '\n'
-        page_data[name.strip()] = value
-    return page_data, ''.join(lines)
-
-
 class Converter:
     whitelist = {'a', 'em', 'sup', 'strong', 'code', 'span'}
     missing_translations = 0
     total_translations = 0
 
-    def __init__(self, params, key='pagedata'):
+    def __init__(self, data, filename, params):
+        self._data = data
+        self._filename = filename
         self._params = params
-        self._key = key
         self._attribute_parser = AttributeParser(self.whitelist)
         self._seen_defaults = {}
-
-        # Read in any parameters specified at the beginning of the file
-        # and override converter defaults with page specific params
-        data, filename = params[key]
-        page_data, body_text = parse_page_content(params['page'], data)
-        params.update(page_data)
-        params[key] = (body_text, filename)
 
     def localize_string(
             self, page, name, default, comment, localedata, escapes):
@@ -295,11 +271,16 @@ class Converter:
             name = match.group(1)
             for format_, converter_class in converters.iteritems():
                 if self._params['source'].has_include(name, format_):
-                    self._params['includedata'] = (
+                    data, filename = (
                         self._params['source'].read_include(name, format_))
 
-                    converter = converter_class(self._params,
-                                                key='includedata')
+                    # XXX: allowing includes to modify params of the whole page
+                    # seems like a bad idea but we have to support this because
+                    # it's used by www.adblockplus.org.
+                    metadata, rest = utils.extract_page_metadata(data)
+                    self._params.update(metadata)
+
+                    converter = converter_class(rest, filename, self._params)
                     result = converter()
                     self.missing_translations += converter.missing_translations
                     self.total_translations += converter.total_translations
@@ -317,18 +298,8 @@ class Converter:
         )
 
     def __call__(self):
-        result = self.get_html(*self._params[self._key])
-        result = self.resolve_includes(result)
-        if self._key == 'pagedata':
-            head = []
-
-            def add_to_head(match):
-                head.append(match.group(1))
-                return ''
-            body = re.sub(r'<head>(.*?)</head>', add_to_head, result,
-                          flags=re.S)
-            return ''.join(head), body
-        return result
+        result = self.get_html(self._data, self._filename)
+        return self.resolve_includes(result)
 
 
 class RawConverter(Converter):
@@ -472,11 +443,9 @@ class TemplateConverter(Converter):
         return name in localedata
 
     def get_page_content(self, page, locale=None):
-        from cms.utils import get_page_params
-
         if locale is None:
             locale = self._params['locale']
-        return get_page_params(self._params['source'], locale, page)
+        return utils.get_page_params(self._params['source'], locale, page)
 
     def linkify(self, page, locale=None, **attrs):
         if locale is None:
@@ -498,7 +467,8 @@ class TemplateConverter(Converter):
         for page_name, _format in self._params['source'].list_pages():
             data, filename = self._params['source'].read_page(page_name,
                                                               _format)
-            page_data = parse_page_content(page_name, data)[0]
+            page_data = utils.extract_page_metadata(data)[0]
+            page_data.setdefault('page', page_name)
             if self.filter_metadata(filters, page_data) is True:
                 return_data.append(page_data)
         return return_data

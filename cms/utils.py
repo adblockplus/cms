@@ -13,11 +13,79 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from cms.converters import converters, TemplateConverter
+import re
+
+__all__ = [
+    'get_page_params',
+    'process_page',
+    'split_head_body',
+    'extract_page_metadata'
+]
+
+
+def split_head_body(html):
+    """Split HTML page into head and remaining content.
+
+    This is used to pass head and body of the page to the template as two
+    separate variables.
+
+    Parameters
+    ----------
+    html: str
+        Source HTML to split.
+
+    Returns
+    -------
+    (str, str)
+        Everything inside of <head> tags found in the page,
+        the rest of the page text with <head> tags removed.
+
+    """
+    head = []
+
+    def add_to_head(match):
+        head.append(match.group(1))
+        return ''
+
+    body = re.sub(r'<head>(.*?)</head>', add_to_head, html, flags=re.S)
+    return ''.join(head), body
+
+
+def extract_page_metadata(source):
+    """Extract metadata variables from source text of the page.
+
+    Parameters
+    ----------
+    source: str
+        Source text of the page.
+
+    Returns
+    -------
+    (dict, str)
+        Metadata of the page, remaining source text without metadata.
+
+    """
+    metadata = {}
+    lines = source.splitlines(True)
+    for i, line in enumerate(lines):
+        if line.strip() in {'<!--', '-->'}:
+            lines[i] = ''
+            continue
+        if not re.search(r'^\s*[\w\-]+\s*=', line):
+            break
+        name, value = line.split('=', 1)
+        value = value.strip()
+        if value.startswith('[') and value.endswith(']'):
+            value = [element.strip() for element in value[1:-1].split(',')]
+        lines[i] = '\n'
+        metadata[name.strip()] = value
+    return metadata, ''.join(lines)
 
 
 def get_page_params(source, locale, page, format=None, site_url_override=None,
                     localized_string_callback=None):
+    from cms.converters import converters
+
     # Guess page format if omitted, but default to Markdown for friendlier exceptions
     if format is None:
         for format in converters.iterkeys():
@@ -31,7 +99,6 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
         'template': 'default',
         'locale': locale,
         'page': page,
-        'pagedata': source.read_page(page, format),
         'config': source.read_config(),
         'localized_string_callback': localized_string_callback,
     }
@@ -47,15 +114,11 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
         else:
             params['site_url'] = params['config'].get('general', 'siteurl')
 
-    try:
-        converter_class = converters[format]
-    except KeyError:
-        raise Exception('Page %s uses unknown format %s' % (page, format))
+    data, filename = source.read_page(page, format)
+    metadata, body = extract_page_metadata(data)
+    params['pagedata'] = body, filename
+    params.update(metadata)
 
-    converter = converter_class(params)
-
-    # Note: The converter might change some parameters so we can only read in
-    # template data here.
     params['templatedata'] = source.read_template(params['template'])
 
     defaultlocale = params['config'].get('general', 'defaultlocale')
@@ -71,7 +134,15 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
     locales.sort()
     params['available_locales'] = locales
 
-    params['head'], params['body'] = converter()
+    try:
+        converter_class = converters[format]
+    except KeyError:
+        raise Exception('Page %s uses unknown format %s' % (page, format))
+
+    converter = converter_class(body, filename, params)
+    converted = converter()
+    params['head'], params['body'] = split_head_body(converted)
+
     if converter.total_translations > 0:
         params['translation_ratio'] = (
             1 - float(converter.missing_translations) / converter.total_translations
@@ -84,8 +155,8 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
 
 def process_page(source, locale, page, format=None, site_url_override=None,
                  localized_string_callback=None):
-    return TemplateConverter(
-        get_page_params(source, locale, page, format,
-                        site_url_override, localized_string_callback),
-        key='templatedata'
-    )()
+    from cms.converters import TemplateConverter
+
+    params = get_page_params(source, locale, page, format, site_url_override,
+                             localized_string_callback)
+    return TemplateConverter(*params['templatedata'], params=params)()
