@@ -174,10 +174,27 @@ class Source:
             result.update(self.read_locale(default_locale, page))
 
         if self.has_locale(locale, page):
-            filedata = self.read_file(self.locale_filename(locale, page))[0]
-            localedata = json.loads(filedata)
-            for key, value in localedata.iteritems():
-                result[key] = value['message']
+            filename = self.locale_filename(locale, page)
+            filedata, filepath = self.read_file(filename)
+            try:
+                localedata = json.loads(filedata)
+                for key, value in localedata.iteritems():
+                    result[key] = value['message']
+            except KeyError as ke:
+                if ke.message != 'message':
+                    raise
+                raise ValueError(
+                    'The content of translations file for page "{}", '
+                    'language "{}" ({}) is not a valid translations file: '
+                    '"message" key is missing for string: "{}"'
+                    .format(page, locale, filepath, key)
+                )
+            except (AttributeError, ValueError):
+                raise ValueError(
+                    'The content of translations file for page "{}", '
+                    'language "{}" ({}) is not a valid JSON dictionary'
+                    .format(page, locale, filepath)
+                )
 
         return result
 
