@@ -4,8 +4,8 @@ title = test_metadata
 tags = [popular, bar]
 <h1> Unfiltered </h1>
 <ul>
-    {%- for unfiltered_page in get_pages_metadata()|sort -%}
-        <li>title : {{ unfiltered_page['page']}} </li>
+{%- for unfiltered_page in get_pages_metadata()|sort %}
+  <li>title : {{ unfiltered_page['page']}} </li>
 {%- endfor %}
 </ul>
 

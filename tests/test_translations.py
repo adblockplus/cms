@@ -15,7 +15,7 @@ def expect_requests():
         ('info?key=test_key&json=1', ''),
         ('supported-languages?key=test_key&json=1', ''),
         ('add-file?key=test_key&json=1', 'translate.json'),
-        ('upload-translation?key=test_key&json=1', 'test_sample'),
+        ('upload-translation?key=test_key&json=1', 'simple'),
         ('delete-file?key=test_key&json=1', 'translate.json'),
         ('delete-file?key=test_key&json=1', 'translate.json'),
         ('delete-directory?key=test_key&json=1', ''),

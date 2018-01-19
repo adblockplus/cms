@@ -147,9 +147,13 @@ class Source:
     # Locale helpers
     #
 
-    @classmethod
-    def locale_filename(cls, locale, page):
-        return cls.localizable_file_filename(locale, page + '.json')
+    def locale_filename(self, locale, page):
+        config = self.read_config()
+        try:
+            page = config.get('locale_overrides', page)
+        except ConfigParser.Error:
+            pass
+        return self.localizable_file_filename(locale, page + '.json')
 
     def list_locales(self):
         result = set()
@@ -160,11 +164,6 @@ class Source:
         return result
 
     def has_locale(self, locale, page):
-        config = self.read_config()
-        try:
-            page = config.get('locale_overrides', page)
-        except ConfigParser.Error:
-            pass
         return self.has_file(self.locale_filename(locale, page))
 
     def read_locale(self, locale, page):

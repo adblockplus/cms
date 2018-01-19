@@ -55,13 +55,16 @@ def output_pages(static_output):
 
 @pytest.mark.parametrize('filename,expected_output', static_expected_outputs)
 def test_static(output_pages, filename, expected_output):
-    assert output_pages[filename] == expected_output
+    if expected_output.startswith('## MISSING'):
+        assert filename not in output_pages
+    else:
+        assert expected_output == output_pages[filename]
 
 
 @pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)
 def test_dynamic(dynamic_server, filename, expected_output):
     response = urllib2.urlopen(dynamic_server + filename)
-    assert response.read().strip() == expected_output
+    assert expected_output == response.read().strip()
 
 
 def test_revision_arg(revision, output_pages):

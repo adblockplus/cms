@@ -3,7 +3,19 @@
 
 
 <h1> Unfiltered </h1>
-<ul><li>title : filter </li><li>title : get_page_url </li><li>title : global </li><li>title : includer </li><li>title : translate </li><li>title : sitemap </li>
+<ul>
+  <li>title : filter </li>
+  <li>title : get_page_url </li>
+  <li>title : global </li>
+  <li>title : includer </li>
+  <li>title : translate </li>
+  <li>title : translate-html </li>
+  <li>title : translate-include </li>
+  <li>title : translate-not-enough </li>
+  <li>title : translate-partial </li>
+  <li>title : translate-template </li>
+  <li>title : translate-tmpl </li>
+  <li>title : sitemap </li>
 </ul>
 
 <h1> Filtered </h1>
