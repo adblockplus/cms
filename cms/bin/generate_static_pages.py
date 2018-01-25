@@ -126,8 +126,8 @@ def generate_pages(repo, output_dir, revision):
 if __name__ == '__main__':
     parser = ArgumentParser('Convert website source to static website')
     parser.add_argument('-r', '--rev',
-                        help=('Specify which revision to generate from. '
-                              'See "hg help revisions" for details.'),
+                        help='Specify which revision to generate from. '
+                             'See "hg help revisions" for details.',
                         default='default')
     parser.add_argument('source', help="Path to website's repository")
     parser.add_argument('output', help='Path to desired output directory')

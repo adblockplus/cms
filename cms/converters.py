@@ -188,10 +188,10 @@ class Converter:
             )
 
         for tag in self.whitelist:
-            allowed_contents = '(?:[^<>]|{})'.format('|'.join((
+            allowed_contents = '(?:[^<>]|{})'.format('|'.join(
                 '<(?:{}[^<>]*?|/{})>'.format(t, t)
                 for t in map(re.escape, self.whitelist - {tag})
-            )))
+            ))
             saved = saved_attributes.get(tag, [])
             for attrs in saved:
                 attrs = map(stringify_attribute, attrs)
