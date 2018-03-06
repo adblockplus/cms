@@ -181,7 +181,7 @@ class Converter:
         # Insert attributes
         result = escape(result)
 
-        def stringify_attribute((name, value)):
+        def stringify_attribute(name, value):
             return '{}="{}"'.format(
                 escape(name),
                 escape(self.insert_localized_strings(value, {}))
@@ -194,7 +194,7 @@ class Converter:
             ))
             saved = saved_attributes.get(tag, [])
             for attrs in saved:
-                attrs = map(stringify_attribute, attrs)
+                attrs = [stringify_attribute(*attr) for attr in attrs]
                 result = re.sub(
                     r'{}({}*?){}'.format(re_escape('<{}>'.format(tag)),
                                          allowed_contents,
