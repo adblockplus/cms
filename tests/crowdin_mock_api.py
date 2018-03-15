@@ -1,92 +1,56 @@
+import os
+
 from flask import Flask, send_from_directory, jsonify, request
 
-app = Flask(__name__)
-app.request_log = []
+app = Flask('mock_api')
+
+
+def load(rootdir, zipdir):
+    app.request_log = []
+    app.config['zipdir'] = zipdir
+    app.config['info'] = {'files': [], 'languages': []}
+    app.config['supported_languages'] = []
+
+    for root, locales, files in os.walk(rootdir):
+        for locale in locales:
+            files = []
+            app.config['supported_languages'].append({'crowdin_code': locale})
+            app.config['info']['languages'].append({
+                'code': locale,
+                'can_translate': 1,
+                'can_approve': 1,
+            })
+
+            for translations in os.listdir(os.path.join(root, locale)):
+                files.append({'name': translations, 'node_type': 'file'})
+
+            app.config['info']['files'].append({
+                'name': locale,
+                'files': files,
+                'node_type': 'directory',
+            })
+
+    return app
 
 
 @app.before_request
 def log_request_info():
-    log = (request.url, str(request.get_data()))
-    app.request_log.append(log)
+    app.request_log.append((request.url, str(request.get_data())))
 
 
 @app.route('/api/project/test/info', methods=['GET'])
 def info():
-    return jsonify(
-        {
-            'languages': [
-                {
-                    'name': 'German',
-                    'code': 'de',
-                    'can_translate': 1,
-                    'can_approve': 1,
+    return jsonify(app.config['info'])
 
-                },
-                {
-                    'name': 'English',
-                    'code': 'en',
-                    'can_translate': 1,
-                    'can_approve': 1,
 
-                },
-
-            ],
-            'files': [
-                {
-                    'node_type': 'directory',
-                    'name': 'en',
-                    'files': [
-                        {
-                            'node_type': 'file',
-                            'name': 'translate.json',
-                            'created': '2016-09-26 08:30:07',
-                            'last_updated': '2016-09-26 08:30:08',
-                            'last_accessed': None,
-                            'last_revision': '1'
-                        },
-                    ]
-                },
-                {
-                    'node_type': 'directory',
-                    'name': 'de',
-                    'files': [
-                        {
-                            'node_type': 'file',
-                            'name': 'translate.json',
-                            'created': '2016-09-26 08:30:07',
-                            'last_updated': '2016-09-26 08:30:08',
-                            'last_accessed': None,
-                            'last_revision': '1'
-                        }
-                    ]
-                }
-            ]
-        }
-    )
+@app.route('/api/project/test/edit-project', methods=['POST'])
+def edit():
+    return jsonify()
 
 
 @app.route('/api/project/test/supported-languages', methods=['GET'])
 def supported_langs():
-    return jsonify(
-        [
-            {
-                'name': 'German',
-                'crowdin_code': 'de',
-                'editor_code': 'de',
-                'iso_639_1': 'de',
-                'iso_639_3': 'deu',
-                'locale': 'de-DE'
-            },
-            {
-                'name': 'English',
-                'crowdin_code': 'en',
-                'editor_code': 'en',
-                'iso_639_1': 'en',
-                'iso_639_3': 'eng',
-                'locale': 'en-US'
-            },
-        ]
-    )
+    return jsonify(app.config['supported_languages'])
 
 
 @app.route('/api/project/test/add-file', methods=['POST'])
@@ -117,4 +81,4 @@ def export():
 
 @app.route('/api/project/test/download/all.zip', methods=['GET'])
 def get_zip():
-    return send_from_directory('', 'all.zip')
+    return send_from_directory(app.config['zipdir'], 'all.zip')
