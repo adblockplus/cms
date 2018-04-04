@@ -1,5 +1,3 @@
-template = empty
-
 Simple TS with default: {{ simple[desc] Translate }}.
 
 Same TS with no default: {{ simple }}.

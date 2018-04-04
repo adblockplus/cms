@@ -59,7 +59,7 @@ def ap_site(temp_site, tmpdir_factory):
 
     pages = ap_root.mkdir('pages')
     for file_name in ['filter.tmpl', 'global.md', 'translate.tmpl']:
-        pages.join(file_name).write('template=empty\n\nMAIN_SITE')
+        pages.join(file_name).write('MAIN_SITE')
     pages.join('map.tmpl').write(base_pages.join('sitemap.tmpl').read())
 
     subprocess.check_call(['hg', 'init', ap_root.strpath])
