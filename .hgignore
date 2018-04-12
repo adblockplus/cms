@@ -3,6 +3,7 @@
 ^.tox$
 ^htmlcov$
 ^.coverage$
+^.pytest_cache$
 
 syntax: glob
 *.pyc
