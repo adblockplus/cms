@@ -19,7 +19,7 @@ __all__ = [
     'get_page_params',
     'process_page',
     'split_head_body',
-    'extract_page_metadata'
+    'extract_page_metadata',
 ]
 
 

@@ -40,5 +40,5 @@ exe = EXE(
     debug=False,
     strip=None,
     upx=False,
-    console=True
+    console=True,
 )

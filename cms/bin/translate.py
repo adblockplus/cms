@@ -45,7 +45,7 @@ class CrowdinAPI:
         url = '/api/project/%s/%s?%s' % (
             urllib.quote(self.project_name),
             urllib.quote(api_endpoint),
-            urllib.urlencode((('key', self.api_key),) + query_params)
+            urllib.urlencode((('key', self.api_key),) + query_params),
         )
         try:
             response = self.connection.request(
@@ -72,7 +72,7 @@ class CrowdinAPI:
 
         response = self.raw_request(
             request_method, api_endpoint, (('json', '1'),),
-            fields=fields, preload_content=False
+            fields=fields, preload_content=False,
         )
 
         try:
@@ -148,7 +148,7 @@ def configure_locales(crowdin_api, local_locales, enabled_locales,
         logger.info('Enabling the required locales for the Crowdin project...')
         crowdin_api.request(
             'POST', 'edit-project',
-            data={'languages': enabled_locales | required_crowdin_locales}
+            data={'languages': enabled_locales | required_crowdin_locales},
         )
 
     return required_locales

@@ -115,10 +115,8 @@ class Source:
 
     def list_localizable_files(self):
         default_locale = self.read_config().get('general', 'defaultlocale')
-        return filter(
-            lambda f: os.path.splitext(f)[1].lower() != '.json',
-            self.list_files('locales/%s' % default_locale)
-        )
+        return filter(lambda f: os.path.splitext(f)[1].lower() != '.json',
+                      self.list_files('locales/%s' % default_locale))
 
     def has_localizable_file(self, locale, filename):
         return self.has_file(self.localizable_file_filename(locale, filename))
@@ -182,18 +180,15 @@ class Source:
             except KeyError as ke:
                 if ke.message != 'message':
                     raise
-                raise ValueError(
-                    'The content of translations file for page "{}", '
-                    'language "{}" ({}) is not a valid translations file: '
-                    '"message" key is missing for string: "{}"'
-                    .format(page, locale, filepath, key)
-                )
+                raise ValueError('The content of translations file for page '
+                                 '"{}", language "{}" ({}) is not a valid '
+                                 'translations file: "message" key is missing '
+                                 'for string: "{}"'.format(page, locale,
+                                                           filepath, key))
             except (AttributeError, ValueError):
-                raise ValueError(
-                    'The content of translations file for page "{}", '
-                    'language "{}" ({}) is not a valid JSON dictionary'
-                    .format(page, locale, filepath)
-                )
+                raise ValueError('The content of translations file for page '
+                                 '"{}", language "{}" ({}) is not a valid '
+                                 'JSON object'.format(page, locale, filepath))
 
         return result
 

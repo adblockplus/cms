@@ -184,7 +184,7 @@ class Converter:
         def stringify_attribute(name, value):
             return '{}="{}"'.format(
                 escape(name),
-                escape(self.insert_localized_strings(value, {}))
+                escape(self.insert_localized_strings(value, {})),
             )
 
         for tag in self.whitelist:
@@ -203,16 +203,16 @@ class Converter:
                         tag,
                         ' ' + ' '.join(attrs) if attrs else '',
                         match.group(1),
-                        tag
+                        tag,
                     ),
-                    result, 1, flags=re.S
+                    result, 1, flags=re.S,
                 )
             result = re.sub(
                 r'{}({}*?){}'.format(re_escape('<{}>'.format(tag)),
                                      allowed_contents,
                                      re_escape('</{}>'.format(tag))),
                 r'<{}>\1</{}>'.format(tag, tag),
-                result, flags=re.S
+                result, flags=re.S,
             )
         return result
 
@@ -237,7 +237,7 @@ class Converter:
             r'}}',
             lookup_string,
             text,
-            flags=re.S
+            flags=re.S,
         )
 
     def process_links(self, text):
@@ -291,10 +291,10 @@ class Converter:
         return re.sub(
             r'{}\?\s*include\s+([^\s<>"]+)\s*\?{}'.format(
                 self.include_start_regex,
-                self.include_end_regex
+                self.include_end_regex,
             ),
             resolve_include,
-            text
+            text,
         )
 
     def __call__(self):
@@ -312,11 +312,11 @@ class RawConverter(Converter):
 class MarkdownConverter(Converter):
     include_start_regex = r'(?:{}|{})'.format(
         Converter.include_start_regex,
-        re.escape(jinja2.escape(Converter.include_start_regex))
+        re.escape(jinja2.escape(Converter.include_start_regex)),
     )
     include_end_regex = r'(?:{}|{})'.format(
         Converter.include_end_regex,
-        re.escape(jinja2.escape(Converter.include_end_regex))
+        re.escape(jinja2.escape(Converter.include_end_regex)),
     )
 
     def get_html(self, source, filename):
@@ -422,7 +422,7 @@ class TemplateConverter(Converter):
     def translate(self, default, name, comment=None):
         return jinja2.Markup(self.localize_string(
             self._params['page'], name, default, comment,
-            self._params['localedata'], html_escapes
+            self._params['localedata'], html_escapes,
         ))
 
     def get_string(self, name, page=None):
@@ -432,7 +432,7 @@ class TemplateConverter(Converter):
         localedata = self._get_locale_data(page)
         default = localedata[name]
         return jinja2.Markup(self.localize_string(
-            page, name, default, '', localedata, html_escapes
+            page, name, default, '', localedata, html_escapes,
         ))
 
     def has_string(self, name, page=None):
@@ -455,7 +455,7 @@ class TemplateConverter(Converter):
         return jinja2.Markup('<a{}>'.format(''.join(
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
-                ('hreflang', locale)
+                ('hreflang', locale),
             ] + attrs.items()
         )))
 
@@ -502,7 +502,7 @@ class TemplateConverter(Converter):
                             '`get_canonical_url()`')
 
         locale, page_url = self._params['source'].resolve_link(
-            page, self._params['locale']
+            page, self._params['locale'],
         )
         # Remove the locale component that `resolve_link` adds at the
         # beginning.
