@@ -14,6 +14,7 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+import json
 
 __all__ = [
     'get_page_params',
@@ -65,21 +66,34 @@ def extract_page_metadata(source):
         Metadata of the page, remaining source text without metadata.
 
     """
-    metadata = {}
-    lines = source.splitlines(True)
-    for i, line in enumerate(lines):
-        if line.strip() in {'<!--', '-->'}:
-            lines[i] = ''
-            continue
-        if not re.search(r'^\s*[\w\-]+\s*=', line):
-            break
-        name, value = line.split('=', 1)
-        value = value.strip()
-        if value.startswith('[') and value.endswith(']'):
-            value = [element.strip() for element in value[1:-1].split(',')]
-        lines[i] = '\n'
-        metadata[name.strip()] = value
-    return metadata, ''.join(lines)
+    m = re.search(r'^\s*<!--\s*(.*?)-->', source, re.S)
+    text = m.group(1) if m else source
+
+    decoder = json.JSONDecoder()
+    try:
+        metadata, length = decoder.raw_decode(text)
+    except ValueError:
+        metadata = None
+
+    if not isinstance(metadata, dict):
+        metadata = {}
+        length = 0
+        for line in text.splitlines(True):
+            if not re.search(r'^\s*[\w\-]+\s*=', line):
+                break
+            name, value = line.split('=', 1)
+            value = value.strip()
+            if value.startswith('[') and value.endswith(']'):
+                value = [element.strip() for element in value[1:-1].split(',')]
+            metadata[name.strip()] = value
+            length += len(line)
+
+    if length > 0:
+        # Need to preserve line numbers for jinja2 tracebacks
+        cutoff = m.end() if m else length
+        source = '\n' * source.count('\n', 0, cutoff) + source[cutoff:]
+
+    return metadata, source
 
 
 def get_page_params(source, locale, page, format=None, site_url_override=None,
