@@ -474,10 +474,6 @@ class TemplateConverter(Converter):
         return return_data
 
     def filter_metadata(self, filters, metadata):
-        # if only the page key is in the metadata then there
-        # was no user defined metadata
-        if metadata.keys() == ['page']:
-            return False
         if filters is None:
             return True
         for filter_name, filter_value in filters.items():

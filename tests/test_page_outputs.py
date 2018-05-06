@@ -13,10 +13,19 @@ def get_expected_outputs(test_type):
     outputs = get_dir_contents(expected_out_path)
     for filename in list(outputs):
         # Move test-type-specific expected outputs (e.g. "xyz@static" -> "xyz")
-        # and remove the expected outputs that don't apply for this test type.
+        # There are cases where we need to test outputs which differ depending
+        # on how they are generated; either statically or dynamically
         if filename.endswith('@' + test_type):
             realname = filename.split('@')[0]
             outputs[realname] = outputs[filename]
+        # Move bookmark specific output (e.g. "xyx@static+master -> xyz+master)
+        # There are cases where we need to test outputs which differ depending
+        # on the bookmark which they are generated from:
+        # https://issues.adblockplus.org/ticket/6605
+        if '+' in filename:
+            realname = ''.join(filename.split('@' + test_type))
+            outputs[realname] = outputs[filename]
+        # Remove the expected outputs that don't apply for this test type.
         if '@' in filename:
             del outputs[filename]
     return outputs.items()
@@ -54,10 +63,13 @@ def output_pages(static_output):
 
 
 @pytest.mark.parametrize('filename,expected_output', static_expected_outputs)
-def test_static(output_pages, filename, expected_output):
+def test_static(revision, output_pages, filename, expected_output):
     if expected_output.startswith('## MISSING'):
         assert filename not in output_pages
-    else:
+    elif revision and '+' + revision in filename:
+        filename = filename.split('+')[0]
+        assert expected_output == output_pages[filename]
+    elif not revision and '+' not in filename:
         assert expected_output == output_pages[filename]
 
 
