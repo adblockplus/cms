@@ -55,15 +55,18 @@ class Source:
         elif self.has_page(alternative_page):
             if not self.has_locale(locale, alternative_page):
                 locale = default_locale
+        elif self.has_static(page):
+            locale = None
         else:
             logging.warning('Link to %s cannot be resolved', page)
 
         parts = page.split('/')
         if parts[-1] == default_page:
             page = '/'.join(parts[:-1])
-
-        path = '/%s/%s' % (locale, page)
-        return locale, urlparse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
+        if locale:
+            path = '/{}/{}'.format(locale, page)
+            return locale, urlparse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
+        return locale, '/' + page
 
     def read_config(self):
         configdata = self.read_file('settings.ini')[0]
