@@ -1,11 +1,14 @@
 import os
 import sys
 import runpy
+
+import mock
 import pytest
 import urllib2
 
 from .conftest import ROOTPATH
 from .utils import get_dir_contents, run_test_server
+from cms.sources import FileSource
 
 
 def get_expected_outputs(test_type):
@@ -18,13 +21,6 @@ def get_expected_outputs(test_type):
         if filename.endswith('@' + test_type):
             realname = filename.split('@')[0]
             outputs[realname] = outputs[filename]
-        # Move bookmark specific output (e.g. "xyx@static+master -> xyz+master)
-        # There are cases where we need to test outputs which differ depending
-        # on the bookmark which they are generated from:
-        # https://issues.adblockplus.org/ticket/6605
-        if '+' in filename:
-            realname = ''.join(filename.split('@' + test_type))
-            outputs[realname] = outputs[filename]
         # Remove the expected outputs that don't apply for this test type.
         if '@' in filename:
             del outputs[filename]
@@ -35,17 +31,11 @@ static_expected_outputs = get_expected_outputs('static')
 dynamic_expected_outputs = get_expected_outputs('dynamic')
 
 
-@pytest.fixture(scope='session', params=['master', None])
-def revision(request):
-    return request.param
-
-
+@mock.patch('cms.sources.FileSource.version', 1)
 @pytest.fixture(scope='session')
-def static_output(revision, request, temp_site):
+def static_output(request, temp_site):
     static_out_path = os.path.join(temp_site, 'static_out')
     sys.argv = ['filler', temp_site, static_out_path]
-    if revision is not None:
-        sys.argv += ['--rev', revision]
 
     runpy.run_module('cms.bin.generate_static_pages', run_name='__main__')
     return static_out_path
@@ -63,13 +53,10 @@ def output_pages(static_output):
 
 
 @pytest.mark.parametrize('filename,expected_output', static_expected_outputs)
-def test_static(revision, output_pages, filename, expected_output):
+def test_static(output_pages, filename, expected_output):
     if expected_output.startswith('## MISSING'):
         assert filename not in output_pages
-    elif revision and '+' + revision in filename:
-        filename = filename.split('+')[0]
-        assert expected_output == output_pages[filename]
-    elif not revision and '+' not in filename:
+    else:
         assert expected_output == output_pages[filename]
 
 
@@ -79,8 +66,6 @@ def test_dynamic(dynamic_server, filename, expected_output):
     assert expected_output == response.read().strip()
 
 
-def test_revision_arg(revision, output_pages):
-    if revision is None:
-        assert 'en/bar' in output_pages
-    else:
-        assert 'en/bar' not in output_pages
+def test_cache(output_pages):
+    source = FileSource(os.path.join('test_site'))
+    assert source.get_cache_dir() == os.path.join('test_site', 'cache')

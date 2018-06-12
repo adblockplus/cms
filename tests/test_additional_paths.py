@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-import subprocess
 import sys
 import urllib2
 
@@ -61,11 +60,6 @@ def ap_site(temp_site, tmpdir_factory):
     for file_name in ['filter.tmpl', 'global.md', 'translate.tmpl']:
         pages.join(file_name).write('MAIN_SITE')
     pages.join('map.tmpl').write(base_pages.join('sitemap.tmpl').read())
-
-    subprocess.check_call(['hg', 'init', ap_root.strpath])
-    subprocess.check_call(['hg', '-R', ap_root.strpath,
-                           'commit', '-A', '-m', 'foo'])
-
     return ap_root
 
 

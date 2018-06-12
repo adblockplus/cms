@@ -19,9 +19,8 @@ import ConfigParser
 import json
 import os
 from StringIO import StringIO
-import subprocess
+from random import randint
 import urlparse
-import zipfile
 import logging
 
 
@@ -221,52 +220,6 @@ class Source:
         return self.read_file(self.include_filename(include, format))
 
 
-class MercurialSource(Source):
-    def __init__(self, repo, revision):
-        command = ['hg', '-R', repo, 'archive', '-r', revision,
-                   '-t', 'uzip', '-p', 'root', '-']
-        data = subprocess.check_output(command)
-        self._archive = zipfile.ZipFile(StringIO(data), mode='r')
-
-        command = ['hg', '-R', repo, 'id', '-n', '-r', revision]
-        self.version = subprocess.check_output(command).strip()
-
-        self._name = os.path.basename(repo.rstrip(os.path.sep))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        return False
-
-    def close(self):
-        self._archive.close()
-
-    def has_file(self, filename):
-        try:
-            self._archive.getinfo('root/' + filename)
-        except KeyError:
-            return False
-        return True
-
-    def read_file(self, filename, binary=False):
-        data = self._archive.read('root/' + filename)
-        if not binary:
-            data = data.decode('utf-8')
-        return (data, '%s!%s' % (self._name, filename))
-
-    def list_files(self, subdir):
-        prefix = 'root/{}/'.format(subdir)
-        for filename in self._archive.namelist():
-            if filename.startswith(prefix):
-                yield filename[len(prefix):]
-
-    if os.name == 'posix':
-        def get_cache_dir(self):
-            return '/var/cache/' + self._name
-
-
 class FileSource(Source):
     def __init__(self, dir):
         self._dir = dir
@@ -279,6 +232,10 @@ class FileSource(Source):
 
     def close(self):
         pass
+
+    @property
+    def version(self):
+        return randint(1, 2 ** 32)
 
     def get_path(self, filename):
         return os.path.join(self._dir, *filename.split('/'))
@@ -411,11 +368,6 @@ def create_source(path, cached=False, revision=None):
     This is usually the case with static generation (as opposed to dynamic
     preview).
 
-    If `revision` option is provided, the `path` is assumed to be pointing to a
-    Mercurial repository. In this case the source will return the content of
-    selected revision (using `MercurialSource`) instead of the content of the
-    directory. Note that any local changes will be ignored in this case.
-
     If `settings.ini` in the source contains `[paths]` section with an
     `additional-paths` key that contains the list of additional root folders,
     `MultiSource` will be instantiated and its bases will be the original
@@ -424,10 +376,7 @@ def create_source(path, cached=False, revision=None):
     provided, so the files in the additional folders will only be used if the
     original source doesn't contain that file.
     """
-    if revision is not None:
-        source = MercurialSource(path, revision)
-    else:
-        source = FileSource(path)
+    source = FileSource(path)
 
     config = source.read_config()
     try:

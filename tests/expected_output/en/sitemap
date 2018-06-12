@@ -3,7 +3,6 @@
 
 <h1> Unfiltered </h1>
 <ul>
-  <li>title : bar </li>
   <li>title : filter </li>
   <li>title : get_page_url </li>
   <li>title : global </li>
