@@ -27,7 +27,7 @@ from cms.sources import create_source
 MIN_TRANSLATED = 0.3
 
 
-def generate_pages(repo, output_dir, revision):
+def generate_pages(repo, output_dir):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
@@ -52,7 +52,7 @@ def generate_pages(repo, output_dir, revision):
         with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
 
-    with create_source(repo, cached=True, revision=revision) as source:
+    with create_source(repo, cached=True) as source:
         config = source.read_config()
         defaultlocale = config.get('general', 'defaultlocale')
         locales = list(source.list_locales())
@@ -125,11 +125,7 @@ def generate_pages(repo, output_dir, revision):
 
 if __name__ == '__main__':
     parser = ArgumentParser('Convert website source to static website')
-    parser.add_argument('-r', '--rev',
-                        help='Specify which revision to generate from. '
-                             'See "hg help revisions" for details.',
-                        default='default')
     parser.add_argument('source', help="Path to website's repository")
     parser.add_argument('output', help='Path to desired output directory')
     args = parser.parse_args()
-    generate_pages(args.source, args.output, args.rev)
+    generate_pages(args.source, args.output)

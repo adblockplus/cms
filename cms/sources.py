@@ -360,8 +360,8 @@ def _memoize(func):
     return wrapper
 
 
-def create_source(path, cached=False, revision=None):
-    """Create a source from path and optional revision.
+def create_source(path, cached=False):
+    """Create a source from path.
 
     `cached` flag activates caching. This can be used to optimize performance
     if no changes are expected on the filesystem after the source was created.
