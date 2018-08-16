@@ -31,13 +31,12 @@ static_expected_outputs = get_expected_outputs('static')
 dynamic_expected_outputs = get_expected_outputs('dynamic')
 
 
-@mock.patch('cms.sources.FileSource.version', 1)
 @pytest.fixture(scope='session')
 def static_output(request, temp_site):
     static_out_path = os.path.join(temp_site, 'static_out')
     sys.argv = ['filler', temp_site, static_out_path]
-
-    runpy.run_module('cms.bin.generate_static_pages', run_name='__main__')
+    with mock.patch('cms.sources.FileSource.version', 1):
+        runpy.run_module('cms.bin.generate_static_pages', run_name='__main__')
     return static_out_path
 
 
