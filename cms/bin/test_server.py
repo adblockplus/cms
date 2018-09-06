@@ -67,7 +67,8 @@ def get_page(path):
     for format in converters.iterkeys():
         for p in (page, alternative_page):
             if source.has_page(p, format):
-                return (p, process_page(source, locale, p, format, 'http://%s:%d' % (address, port)))
+                site_url = 'http://{}:{}'.format(address, port)
+                return (p, process_page(source, locale, p, format, site_url))
     if source.has_localizable_file(locale, page):
         return (page, source.read_localizable_file(locale, page))
 

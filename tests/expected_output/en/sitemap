@@ -12,6 +12,7 @@
   <li>title : metadata_old_comment </li>
   <li>title : rel_path </li>
   <li>title : sitemap </li>
+  <li>title : siteurl </li>
   <li>title : translate </li>
   <li>title : translate-html </li>
   <li>title : translate-include </li>
