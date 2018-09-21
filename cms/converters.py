@@ -327,7 +327,9 @@ class MarkdownConverter(Converter):
             return char
 
         escapes = {}
-        md = markdown.Markdown(output='html5', extensions=['extra'])
+        md = markdown.Markdown(output='html5', extensions=[
+            'markdown.extensions.extra',
+        ])
         for char in md.ESCAPED_CHARS:
             escapes[char] = '&#{};'.format(str(ord(char)))
         for key, value in html_escapes.iteritems():
