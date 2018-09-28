@@ -135,10 +135,7 @@ class Converter:
             self, page, name, default, comment, localedata, escapes):
 
         def escape(s):
-            return re.sub(r'.',
-                          lambda match: escapes.get(match.group(0),
-                                                    match.group(0)),
-                          s, flags=re.S)
+            return ''.join(escapes.get(c, c) for c in s)
 
         def re_escape(s):
             return re.escape(escape(s))

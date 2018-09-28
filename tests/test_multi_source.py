@@ -101,7 +101,7 @@ def test_read_file(multi_source):
 
 
 def test_read_binary(multi_source):
-    assert isinstance(multi_source.read_file('a', binary=True)[0], type(b'b'))
+    assert isinstance(multi_source.read_file('a', True)[0], type(b'b'))
 
 
 def test_list_files(multi_source):
