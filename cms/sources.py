@@ -124,7 +124,7 @@ class Source:
         return self.has_file(self.localizable_file_filename(locale, filename))
 
     def read_localizable_file(self, locale, filename):
-        return self.read_file(self.localizable_file_filename(locale, filename), binary=True)[0]
+        return self.read_file(self.localizable_file_filename(locale, filename), True)[0]
 
     #
     # Static file helpers
@@ -141,7 +141,7 @@ class Source:
         return self.has_file(self.static_filename(filename))
 
     def read_static(self, filename):
-        return self.read_file(self.static_filename(filename), binary=True)[0]
+        return self.read_file(self.static_filename(filename), True)[0]
 
     #
     # Locale helpers
@@ -394,10 +394,13 @@ def create_source(path, cached=False):
 
     if cached:
         for fname in [
+            'list_files',
+            'list_locales',
             'resolve_link',
             'read_config',
             'read_template',
             'read_locale',
+            'read_file',
             'read_include',
             'exec_file',
         ]:
