@@ -272,6 +272,16 @@ class FileSource(Source):
         do_list(self.get_path(subdir), '')
         return result
 
+    def write_to_config(self, section, option, value):
+        config = self.read_config()
+        try:
+            config.set(section, option, value)
+        except ConfigParser.NoSectionError:
+            config.add_section(section)
+            config.set(section, option, value)
+        with open(self.get_path('settings.ini'), 'w') as cnf:
+            config.write(cnf)
+
     def get_cache_dir(self):
         return os.path.join(self._dir, 'cache')
 

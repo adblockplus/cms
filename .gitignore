@@ -6,3 +6,4 @@
 *.pyc
 *.pyo
 htmlcov/
+.idea/
