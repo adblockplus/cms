@@ -1,7 +1,15 @@
+from __future__ import unicode_literals
+
 import os
 import pytest
 import shutil
 
+pytest_plugins = [
+    'tests.xtm_conftest',
+]
+
+_INTERCEPT_PORT = 443
+_INTERCEPT_HOST = 'wstest2.xtm-intl.com'
 
 ROOTPATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
