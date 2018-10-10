@@ -18,6 +18,10 @@ import os
 import signal
 import subprocess
 import time
+import zipfile
+from io import BytesIO
+
+import pytest
 
 
 def get_dir_contents(path):
@@ -47,3 +51,36 @@ def run_test_server(site_path):
     time.sleep(0.5)
     yield 'http://localhost:5000/'
     os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+
+
+def create_in_memory_zip(file_names, file_data):
+    """Create a BytesIO object with the contents of a zip file.
+
+    Parameters
+    ----------
+    file_names: iterable
+        Of file names. Should be the full paths of the file inside the zip.
+    file_data: iterable
+        The data to be contained of the files.
+
+    Returns
+    -------
+    BytesIO
+        The resulting in-memory zip file.
+
+    """
+    memory_zip = BytesIO()
+
+    with zipfile.ZipFile(memory_zip, 'w') as zf:
+        for idx in range(len(file_names)):
+            zf.writestr(file_names[idx], file_data[idx], zipfile.ZIP_DEFLATED)
+
+    memory_zip.seek(0)
+    return memory_zip
+
+
+def exception_test(func, exception, exp_msg, *args, **kw):
+    with pytest.raises(exception) as err:
+        func(*args, **kw)
+
+    assert exp_msg in str(err.value)
