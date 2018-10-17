@@ -4,6 +4,7 @@
 <h1> Unfiltered </h1>
 <ul>
   <li>title : filter </li>
+  <li>title : foo/bar </li>
   <li>title : get_page_url </li>
   <li>title : global </li>
   <li>title : includer </li>

@@ -15,16 +15,101 @@
 
 import os
 import re
-import errno
 import codecs
 import ConfigParser
 import logging
 from argparse import ArgumentParser
+import shutil
 
 from cms.utils import get_page_params, process_page
 from cms.sources import create_source
 
 MIN_TRANSLATED = 0.3
+
+
+def ensure_dirs(partial_path, path_parts):
+    """Create an entire path of directories.
+
+    This is a recursive function, that also treats these special cases, if
+    the partial path we reached so far exists and is:
+
+    1. a directory - do nothing, just move on,
+    2. a file - remove the file, create a directory in its place, and move on.
+    3. neither a file, nor a directory - raise and exception.
+
+    Parameters
+    ----------
+    partial_path: str
+        The path to resolve at this step.
+    path_parts: iterable
+        The remaining directories that will be created.
+
+    Raises
+    -------
+    Exception
+        If the path we want to resolve at this step exists and is neither a
+        file, nor a directory.
+
+    """
+    if os.path.isfile(partial_path):
+        os.remove(partial_path)
+    elif os.path.exists(partial_path) and not os.path.isdir(partial_path):
+        raise Exception('The object at {} is not recognisable! It is neither '
+                        'a file, nor a directory!'.format(partial_path))
+
+    if not os.path.isdir(partial_path):
+        os.mkdir(partial_path)
+
+    if len(path_parts) == 0:
+        return
+
+    ensure_dirs(os.path.join(partial_path, path_parts[0]), path_parts[1:])
+
+
+def is_in_previous_version(path, new_contents, encoding):
+    """Test if a file we try to create already is in the output directory.
+
+    It tests if the pre-existent file has all the expected content.
+    It also handles the following two cases:
+
+    1. The path is a directory - If this happens, it removes the directory from
+    the file tree.
+    2. The path exists, but it's neither a file, nor a directory. - If this
+    happens, it will raise an exception.
+
+    Parameters
+    ----------
+    path: str
+        The path we want to test for existence.
+    new_contents: bytes
+        The contents we want to write to the file in the new version of the
+        website.
+    encoding: str
+        The encoding to open the file in (if the path exists and is a file.
+
+    Returns
+    -------
+    bool
+        True - if the file exists and has the same contents.
+        False - if the path doesn't exist/ is not a file.
+
+    Raises
+    ------
+    Exception
+        If the path exists, but is neither a file, nor a directory.
+
+    """
+    if os.path.isfile(path):
+        with codecs.open(path, 'rb', encoding=encoding) as handle:
+            if handle.read() == new_contents:
+                return True
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+    elif os.path.exists(path):
+        raise Exception('The object at {} is not recognisable! It is '
+                        'neither a file, nor a directory!'.format(path))
+
+    return False
 
 
 def generate_pages(repo, output_dir):
@@ -38,16 +123,10 @@ def generate_pages(repo, output_dir):
             return
         known_files.add(outfile)
 
-        if os.path.exists(outfile):
-            with codecs.open(outfile, 'rb', encoding=encoding) as handle:
-                if handle.read() == contents:
-                    return
+        if is_in_previous_version(outfile, contents, encoding):
+            return
 
-        try:
-            os.makedirs(os.path.dirname(outfile))
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
+        ensure_dirs(output_dir, path_parts[:-1])
 
         with codecs.open(outfile, 'wb', encoding=encoding) as handle:
             handle.write(contents)
