@@ -21,6 +21,7 @@
   <li>title : translate-partial </li>
   <li>title : translate-template </li>
   <li>title : translate-tmpl </li>
+  <li>title : translate-unicode </li>
 </ul>
 
 <h1> Filtered </h1>

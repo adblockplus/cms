@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 import json
 import os
 
@@ -219,3 +221,11 @@ def test_write_data(toydir, path):
     utils.write_to_file(data, str(toydir.join(path)))
 
     assert toydir.join(path).read('rb') == data
+
+
+def test_extract_unicode_strings(temp_site):
+    """Test correct extraction of unicode strings for translation."""
+    with FileSource(temp_site) as fs:
+        strings = utils.extract_strings(fs)
+
+    assert '\u0376' in strings['translate-unicode']['simple']['message']
