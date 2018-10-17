@@ -150,6 +150,7 @@ class Converter:
                 raise Exception('Text not yet defined for string {} on page'
                                 ' {}'.format(name, page))
 
+        full_default = default
         # Extract tag attributes from default string
         default, saved_attributes, fixed_strings = (
             self._attribute_parser.parse(default, self._params['page']))
@@ -160,6 +161,14 @@ class Converter:
             result = default
         elif name in localedata:
             result = localedata[name].strip()
+            # If the string is present in default locale, but not in the
+            # current one, we will get the value from default locale here.
+            # If it happens to contain attributes on any tags, those need
+            # to be stripped, otherwise the attribute substitution below won't
+            # work. Luckily, we already have the default translation string
+            # with attributes stripped -- it's the value of `default`.
+            if result == full_default.strip():
+                result = default
         else:
             result = default
             self.missing_translations += 1

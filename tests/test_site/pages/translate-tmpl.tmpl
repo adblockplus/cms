@@ -13,5 +13,7 @@ Link resolving: {{ '<a href="translate">This page</a>' | translate('linked-ts') 
 Entity escaping: {{ 'Drag&drop' | translate('entity-ts') }}.
 
 Entity escaping in links: {{ '<a href="http://foo.com/?a&b">Foo</a>' | translate('entity-lnk') }}.
+
+Translation string with href: {{ get_string('href_inside') }}.
   </body>
 </html>

@@ -2,5 +2,9 @@
   "simple": {
     "description": "test",
     "message": "Translate"
+  },
+  "href_inside": {
+    "description": "A tranlsation string with some tags inside.",
+    "message": "<sup>s</sup> <a href=\"http://foo.com/\">foo</a>"
   }
 }
