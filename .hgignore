@@ -10,3 +10,4 @@ syntax: glob
 *.pyo
 .cache
 .idea/
+.idea/

@@ -13,5 +13,7 @@ Link resolving: <a href="/de/translate" hreflang="de">Diese Seite</a>.
 Entity escaping: Draggen&amp;droppen.
 
 Entity escaping in links: <a href="http://foo.com/?a&amp;b">Bar</a>.
+
+Translation string with href: <sup>s</sup> <a href="http://foo.com/">foo</a>.
   </body>
 </html>

@@ -7,3 +7,5 @@
 *.pyo
 htmlcov/
 .idea/
+
+.idea/
