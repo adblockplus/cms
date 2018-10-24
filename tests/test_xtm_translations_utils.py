@@ -82,8 +82,7 @@ def test_sanitize_project_name_characters():
     )
     exp_out = '{0}{1}{0}'.format(
         'test',
-        const.ProjectName.NAME_WILDCARD *
-        len(const.ProjectName.INVALID_CHARS),
+        const.ProjectName.NAME_WILDCARD * len(const.ProjectName.INVALID_CHARS),
     )
 
     assert exp_out == utils.sanitize_project_name(test_in)

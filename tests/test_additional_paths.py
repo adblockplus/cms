@@ -52,8 +52,8 @@ def ap_site(temp_site, tmpdir_factory):
 
     ap_root = tmpdir_factory.mktemp('ap_site')
     ap_root.join('settings.ini').write(
-        base_root.join('settings.ini').read() +
-        PATHS_FRAGMENT_TEMPLATE.format(base_root),
+        base_root.join('settings.ini').read()
+        + PATHS_FRAGMENT_TEMPLATE.format(base_root),
     )
 
     pages = ap_root.mkdir('pages')
