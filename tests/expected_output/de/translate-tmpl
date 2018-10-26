@@ -4,6 +4,8 @@ Simple TS with default: Übersetzen.
 
 Same TS with no default: Übersetzen.
 
+Another TS with no default: Deutsche <a href="http://foo.com/">Übersetzung</a>.
+
 TS with fixed text: Fester text.
 
 Nested translation: <a href="http://bar.de/">Bar</a> und <a href="http://baz.de/">Baz</a>.

@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
+import functools
 import re
 import json
 
@@ -22,6 +23,34 @@ __all__ = [
     'split_head_body',
     'extract_page_metadata',
 ]
+
+
+def memoize(func):
+    """Cache results of functions calls.
+
+    Parameters
+    ----------
+    func : function
+        Function to be cached.
+
+    Returns
+    -------
+    wrapped : function
+        Function that returns the same results as `func`, but only calls `func`
+        once for each value of arguments.
+
+    """
+    memoized = {}
+
+    @functools.wraps(func)
+    def wrapper(*args):
+        try:
+            return memoized[args]
+        except KeyError:
+            return memoized.setdefault(args, func(*args))
+
+    wrapper.cache_clear = memoized.clear
+    return wrapper
 
 
 def split_head_body(html):
@@ -117,10 +146,10 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
         'localized_string_callback': localized_string_callback,
     }
 
-    localefile = page
-    if params['config'].has_option('locale_overrides', page):
-        localefile = params['config'].get('locale_overrides', page)
-    params['localedata'] = source.read_locale(params['locale'], localefile)
+    params['localedata'] = source.read_locale(params['locale'], page)
+    defaultlocale = params['config'].get('general', 'defaultlocale')
+    params['defaultlocale'] = defaultlocale
+    params['default_localedata'] = source.read_locale(defaultlocale, page)
 
     if params['config'].has_option('general', 'siteurl'):
         if site_url_override:
@@ -135,14 +164,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
 
     params['templatedata'] = source.read_template(params['template'])
 
-    defaultlocale = params['config'].get('general', 'defaultlocale')
-    params['defaultlocale'] = defaultlocale
-
-    locales = [
-        l
-        for l in source.list_locales()
-        if source.has_locale(l, localefile)
-    ]
+    locales = [l for l in source.list_locales() if source.has_locale(l, page)]
     if defaultlocale not in locales:
         locales.append(defaultlocale)
     locales.sort()

@@ -3,6 +3,10 @@
     "description": "test",
     "message": "Übersetzen"
   },
+  "nodefault": {
+    "description": "default provided by translation file",
+    "message": "Deutsche <a>Übersetzung</a>"
+  },
   "fix-ts": {
     "description": "fix",
     "message": "Fester {1}"

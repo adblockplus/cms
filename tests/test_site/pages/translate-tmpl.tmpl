@@ -4,6 +4,8 @@ Simple TS with default: {{ 'Translate' | translate('simple') }}.
 
 Same TS with no default: {{ get_string('simple') }}.
 
+Another TS with no default: {{ get_string('nodefault') }}.
+
 TS with fixed text: {{ 'Fixed <fix>text</fix>' | translate('fix-ts') }}.
 
 Nested translation: {{ '<a href="{{nested-link http://foo.com/}}">Foo</a> and <a href="{{nested-link2 http://baz.com/}}">Baz</a>' | translate('nested-ts') }}.

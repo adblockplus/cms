@@ -23,6 +23,8 @@ from random import randint
 import urlparse
 import logging
 
+from cms import utils
+
 
 class Source:
     def resolve_link(self, url, locale):
@@ -357,19 +359,6 @@ class MultiSource(Source):
             return False
 
 
-def _memoize(func):
-    """Cache results of functions calls."""
-    memoized = {}
-
-    def wrapper(*args):
-        try:
-            return memoized[args]
-        except KeyError:
-            return memoized.setdefault(args, func(*args))
-    wrapper.cache_clear = memoized.clear
-    return wrapper
-
-
 def create_source(path, cached=False):
     """Create a source from path.
 
@@ -414,6 +403,6 @@ def create_source(path, cached=False):
             'read_include',
             'exec_file',
         ]:
-            setattr(source, fname, _memoize(getattr(source, fname)))
+            setattr(source, fname, utils.memoize(getattr(source, fname)))
 
     return source

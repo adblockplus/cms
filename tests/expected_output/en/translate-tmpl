@@ -4,6 +4,8 @@ Simple TS with default: Translate.
 
 Same TS with no default: Translate.
 
+Another TS with no default: the <a href="http://foo.com/">default</a> is provided in EN translation file.
+
 TS with fixed text: Fixed text.
 
 Nested translation: <a href="http://foo.com/">Foo</a> and <a href="http://baz.com/">Baz</a>.
