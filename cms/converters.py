@@ -485,7 +485,7 @@ class TemplateConverter(Converter):
             page = self._params['page']
 
         return jinja2.Markup(self.localize_string(
-            page, name, '', '', html_escapes, default_required=False,
+            page, name, None, '', html_escapes, default_required=False,
         ))
 
     def has_string(self, name, page=None):
