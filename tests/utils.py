@@ -23,6 +23,10 @@ from io import BytesIO
 
 import pytest
 
+from cms.translations.xtm.projects_handler import (
+    create_project, upload_files, download_files,
+)
+
 
 def get_dir_contents(path):
     # TODO: This function is duplicated in test_page_outputs.py.
@@ -80,7 +84,50 @@ def create_in_memory_zip(file_names, file_data):
 
 
 def exception_test(func, exception, exp_msg, *args, **kw):
+    """Test if a function raises the correct exception.
+
+    Parameters
+    ----------
+    func: function
+        The function we're testing.
+    exception: classobj
+        The exception we expect to be raised.
+    exp_msg: str
+        The message we expect the exception to contain.
+
+    """
     with pytest.raises(exception) as err:
         func(*args, **kw)
 
     assert exp_msg in str(err.value)
+
+
+class XtmMockArgs:
+    """Mock arguments for the XTM integration script."""
+
+    class CreationArgsNamespace:
+        """Mock arguments for creating a new XTM project."""
+
+        name = 'bar'
+        desc = 'foo'
+        client_id = 10
+        ref_id = 'faz'
+        workflow_id = 20
+        save_id = False
+        source_dir = None
+        projects_func = staticmethod(create_project)
+        source_lang = 'en_US'
+        workflow_name = None
+
+    class UploadArgsNamespace:
+        """Mock arguments for uploading files to XTM for translation."""
+
+        source_dir = None
+        projects_func = staticmethod(upload_files)
+        no_overwrite = False
+
+    class DownloadArgsNamespace:
+        """Mock arguments for downloading translation from XTM."""
+
+        source_dir = None
+        projects_func = staticmethod(download_files)

@@ -138,3 +138,17 @@ def test_file_upload(intercept, token, project_id, files, exp_err, exp_msg,
         exception_test(api.upload_files, exp_err, exp_msg, files, project_id)
     else:
         assert exp_jobs == api.upload_files(files, project_id)
+
+
+@pytest.mark.parametrize('token,name,exp_err,exp_msg,exp_ids', [
+    (_INVALID_TOKEN, 'foo', XTMCloudException, 'Authentication failed', None),
+    (_VALID_TOKEN, 'workflow', None, None, []),
+    (_VALID_TOKEN, 'workflow1', None, None, [2222]),
+])
+def test_workflow_id_extraction(intercept, token, name, exp_err,
+                                exp_msg, exp_ids):
+    api = XTMCloudAPI(token)
+    if exp_msg is not None:
+        exception_test(api.get_workflows_by_name, exp_err, exp_msg, name)
+    else:
+        assert exp_ids == api.get_workflows_by_name(name)

@@ -104,7 +104,7 @@ def parse_args():
         help=const.ArgumentsHelp.ProjectCreate.REF_ID,
     )
     project_create_parser.add_argument(
-        '--workflow-id', required=True, type=int,
+        '--workflow-id', type=int,
         help=const.ArgumentsHelp.ProjectCreate.WORKFLOW_ID,
     )
     project_create_parser.add_argument(
@@ -114,6 +114,10 @@ def parse_args():
     project_create_parser.add_argument(
         '--save-id', action='store_true', default=False,
         help=const.ArgumentsHelp.ProjectCreate.SAVE_ID,
+    )
+    project_create_parser.add_argument(
+        '--workflow-name',
+        help=const.ArgumentsHelp.ProjectCreate.WORKFLOW_NAME,
     )
 
     #  Subparser for uploading files to project

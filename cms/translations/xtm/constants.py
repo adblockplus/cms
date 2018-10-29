@@ -64,6 +64,14 @@ class ErrorMessages:
                              'Please generate them and then try again!')
     COULD_NOT_SAVE_FILES = ('Error: Could not save the downloaded files to '
                             'disk!')
+    WORKFLOW_NAME_AND_ID_PROVIDED = ('Error: Provide only one of '
+                                     '"--workflow-name" and "--workflow-id" '
+                                     'at a time, not both.')
+    NO_WORKFLOW_INFO = ('Error: No workflow information provided. Please '
+                        'use one of "--workflow-id" or "--workflow-name" to '
+                        'do that.')
+    NO_WORKFLOW_FOR_NAME = ('Error: Could not find any workflow with the '
+                            'name "{}"')
 
 
 class WarningMessages:
@@ -104,6 +112,7 @@ class ArgumentsHelp:
         SOURCE = 'The source language for this project. Default "en_US".'
         SAVE_ID = ('Whether to save the id of the project to settings.ini or '
                    'not. Default False.')
+        WORKFLOW_NAME = 'The name of the workflow used in the project.'
 
     class ProjectUpload:
         MAIN = 'Sub-mode used to upload files to an XTM Cloud project.'

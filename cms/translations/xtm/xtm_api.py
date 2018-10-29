@@ -61,6 +61,7 @@ class XTMCloudAPI(object):
         UPLOAD = 'projects/{0}/files/upload'
         GET_TARGET_LANG = 'projects/{0}/metrics'
         ADD_TARGET_LANG = 'projects/{0}/target-languages'
+        GET_WORKFLOW_IDS = 'workflows'
 
     _MATCH_TYPE = {
         False: 'NO_MATCH',
@@ -73,6 +74,7 @@ class XTMCloudAPI(object):
         DOWNLOAD = 200
         GET_TARGET_LANGS = 200
         ADD_TARGET_LANGS = 200
+        GET_WORKFLOW_IDS = 200
 
     def __init__(self, token):
         """Constructor.
@@ -387,6 +389,35 @@ class XTMCloudAPI(object):
         if response.status_code != self._SuccessCodes.ADD_TARGET_LANGS:
             raise XTMCloudException(response.status_code, response.content,
                                     'adding target languages to project')
+
+    def get_workflows_by_name(self, name):
+        """Get workflows with a specific name.
+
+        Parameters
+        ----------
+        name: str
+            The name of the workflow we're looking for.
+
+        Returns
+        -------
+        iterable
+            Of workflow ids that match the name provided.
+
+        """
+        url = self.base_url + self._UrlPaths.GET_WORKFLOW_IDS
+
+        response = self._execute(url, params={'name': name})
+
+        if response.status_code != self._SuccessCodes.GET_WORKFLOW_IDS:
+            raise XTMCloudException(response.status_code, response.content,
+                                    'extracting workflow ids')
+
+        valid_ids = []
+        for item in json.loads(response.content.encode('utf-8')):
+            if name.lower().replace(' ', '') == \
+                    item['name'].lower().replace(' ', ''):
+                valid_ids.append(item['id'])
+        return valid_ids
 
 
 def get_token(username, password, user_id):
