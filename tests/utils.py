@@ -20,6 +20,7 @@ import subprocess
 import time
 import zipfile
 from io import BytesIO
+import urllib2
 
 import pytest
 
@@ -41,20 +42,62 @@ def get_dir_contents(path):
 
 
 @contextlib.contextmanager
-def run_test_server(site_path):
+def run_test_server(site_path, new_env=None):
     """Run test server, yield its URL. Terminate server on next iteration.
 
     This function is intended be used in a pytest fixture.
+
+    Parameters
+    ----------
+    site_path: str
+        The path to the website's source code.
+    new_env: dict
+        The environment under which the server will be run. If `None`, this
+        will be inherited from the main process.
+
+    Returns
+    -------
+    str
+        The url where the server runs.
+
     """
     args = ['python', 'runserver.py', site_path]
     # Werkzeug is a dependency of flask which we are using for the mock api
     # however there is an issue with Werkzeug that prevents it from properly
     # handling the SIGTERM sent by p.kill() or terminate()
     # Issue: https://github.com/pallets/werkzeug/issues/58
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid)
-    time.sleep(0.5)
-    yield 'http://localhost:5000/'
-    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, preexec_fn=os.setsid,
+                         env=new_env)
+
+    try:
+        _wait_for_server()
+        yield 'http://localhost:5000/'
+    finally:
+        os.killpg(os.getpgid(p.pid), signal.SIGINT)
+
+
+def _wait_for_server():
+    """Test the server started by `run_test_server` and fail after 2s.
+
+    Expects the server to be active at `http://localhost:5000/`.
+
+    Raises
+    ------
+    Exception
+        If the server is not running after retry-ing for 2 seconds.
+        This will be the exception raised by `urllib2.urlopen`.
+
+    """
+    start_time = time.time()
+
+    while True:
+        try:
+            urllib2.urlopen('http://localhost:5000/')
+            break
+        except Exception:
+            time.sleep(.1)
+            if time.time() - start_time > 2:
+                raise
 
 
 def create_in_memory_zip(file_names, file_data):
