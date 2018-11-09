@@ -112,7 +112,7 @@ def is_in_previous_version(path, new_contents, encoding):
     return False
 
 
-def generate_pages(repo, output_dir):
+def generate_pages(repo, output_dir, relative=False):
     known_files = set()
 
     def write_file(path_parts, contents, binary=False):
@@ -171,7 +171,7 @@ def generate_pages(repo, output_dir):
 
         # Second pass: actually generate pages this time
         for locale, page in pagelist:
-            pagedata = process_page(source, locale, page)
+            pagedata = process_page(source, locale, page, relative=relative)
 
             # Make sure links to static files are versioned
             pagedata = re.sub(r'(<script\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
@@ -206,5 +206,7 @@ if __name__ == '__main__':
     parser = ArgumentParser('Convert website source to static website')
     parser.add_argument('source', help="Path to website's repository")
     parser.add_argument('output', help='Path to desired output directory')
+    parser.add_argument('--relative', help='Generate relative links',
+                        action='store_true')
     args = parser.parse_args()
-    generate_pages(args.source, args.output)
+    generate_pages(args.source, args.output, args.relative)

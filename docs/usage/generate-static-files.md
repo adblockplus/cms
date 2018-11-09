@@ -19,6 +19,11 @@ Run the following command from the directory of the `cms` repository:
 Here `www_directory` should be replaced by the path to your content directory.
 `target_directory` is the path where static files will be placed.
 
+The files can also be generated with relative links instead of asolute links by
+using the `--relative` option:
+
+    python -m cms.bin.generate_static_pages www_directory target_directory --relative
+
 Note: Localized versions of pages will only be generated when their translations
 are at least 30% complete. (Measured by comparing the total number
 of translatable strings on a page to the number of strings that have been
