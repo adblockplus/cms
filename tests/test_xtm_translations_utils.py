@@ -24,9 +24,9 @@ from cms.translations.xtm import utils
 import cms.translations.xtm.constants as const
 from cms.sources import FileSource
 from cms.translations.xtm.xtm_api import XTMCloudAPI
-from tests.utils import exception_test
+from tests.utils import exception_test, XtmMockArgs
 
-_API_TOKEN = 'TheXTM-APIToken-VALID'
+_API_TOKEN_VALID = 'TheXTM-APIToken-VALID'
 _PROJECT_ID = 1234
 
 
@@ -157,7 +157,7 @@ def test_resolve_locales(intercept_populated, temp_site):
 
     In this environment, no languages have to be added.
     """
-    api = XTMCloudAPI(_API_TOKEN)
+    api = XTMCloudAPI(_API_TOKEN_VALID)
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
 
@@ -169,7 +169,7 @@ def test_resolve_locales_adds_langs(intercept, temp_site):
 
     In this environment, new target languages are added.
     """
-    api = XTMCloudAPI(_API_TOKEN)
+    api = XTMCloudAPI(_API_TOKEN_VALID)
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
     exp_targets = {'de_DE'}
@@ -185,7 +185,7 @@ def test_resolve_locales_raise_exception(intercept_populated, temp_site):
     In this environment, the API has more target languages configured than are
     available online. We except an exception to be raised.
     """
-    api = XTMCloudAPI(_API_TOKEN)
+    api = XTMCloudAPI(_API_TOKEN_VALID)
     api.add_target_languages(_PROJECT_ID, ['ro_RO'])
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
@@ -220,6 +220,32 @@ def test_write_data(toydir, path):
     utils.write_to_file(data, str(toydir.join(path)))
 
     assert toydir.join(path).read('rb') == data
+
+
+@pytest.mark.parametrize('id_in,name,exp_err,exp_msg,exp_id', [
+    (1234, 'foo', Exception,
+     const.ErrorMessages.WORKFLOW_NAME_AND_ID_PROVIDED, None),
+    (None, None, Exception, const.ErrorMessages.NO_WORKFLOW_INFO, None),
+    (None, 'foo', Exception,
+     const.ErrorMessages.NO_WORKFLOW_FOR_NAME.format('foo'), None),
+    (1234, None, None, None, 1234),
+    (None, 'workflow1', None, None, 2222),
+])
+def test_handle_workflows(intercept, id_in, name, exp_err, exp_msg, exp_id):
+    """"""
+    namespace = XtmMockArgs.CreationArgsNamespace()
+    namespace.workflow_id = id_in
+    namespace.workflow_name = name
+
+    api = XTMCloudAPI(_API_TOKEN_VALID)
+
+    if exp_err:
+        exception_test(utils.extract_workflow_id, exp_err, exp_msg, api,
+                       namespace)
+    else:
+        id_out = utils.extract_workflow_id(api, namespace)
+
+        assert id_out == exp_id
 
 
 def test_extract_unicode_strings(temp_site):

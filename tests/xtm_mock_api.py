@@ -52,6 +52,10 @@ def get_configured_app(**kwargs):
     xtm_mock.config['target_languages'] = kwargs.pop('target_langs', ['de_DE'])
     xtm_mock.config['files'] = kwargs.pop('files', [])
     xtm_mock.config['source_language'] = kwargs.pop('source_lang', 'en_US')
+    xtm_mock.config['workflows'] = [
+        {'name': 'workflow1', 'id': 2222},
+        {'name': 'workflow2', 'id': 3333},
+    ]
     return xtm_mock.wsgi_app
 
 
@@ -267,6 +271,24 @@ def download(project_id):
         zip_file,
         mimetype='application/zip',
     )
+
+
+@xtm_mock.route('/rest-api/workflows', methods=['GET'])
+def get_workflows():
+    if not _check_auth():
+        return Response(
+            status=401,
+            response=json.dumps({'reason': 'Authentication failed.'}),
+        )
+
+    name = request.args.get('name')
+    result = []
+
+    for workflow in xtm_mock.config['workflows']:
+        if name in workflow['name']:
+            result.append(workflow)
+
+    return jsonify(result)
 
 
 if __name__ == '__main__':

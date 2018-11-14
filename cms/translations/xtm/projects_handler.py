@@ -71,11 +71,11 @@ def create_project(args, api, source):
             reference_id=args.ref_id,
             target_languages=target_langs,
             customer_id=args.client_id,
-            workflow_id=args.workflow_id,
+            workflow_id=utils.extract_workflow_id(api, args),
             source_language=args.source_lang,
             files=files_to_upload,
         )
-    except XTMCloudException as err:
+    except Exception as err:
         sys.exit(err)
 
     logging.info(const.InfoMessages.PROJECT_CREATED.format(project_id))

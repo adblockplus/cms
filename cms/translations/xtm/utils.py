@@ -443,3 +443,47 @@ def input_fn(text):
         return raw_input(text)
     except Exception:
         return input(text)
+
+
+def extract_workflow_id(api, args):
+    """Extract the workflow id, using the arguments provided by the user.
+
+    Parameters
+    ----------
+    api: XTMCloudAPI
+        Used to interact with the XTM API.
+    args: argparse.Namespace
+        With the arguments provided to the script.
+
+    Returns
+    -------
+    int
+        With the corresponding workflow id.
+
+    Raises
+    ------
+    XTMCloudException
+        If the API communication fails in any way.
+    Exception
+        In one of the following situations:
+            1. If both `--workflow-id` and `--workflow-name` are provided.
+            2. If none of the parameters above are provided.
+            3. If there are no workflows associated with a given name.
+
+    """
+    if args.workflow_id and args.workflow_name:
+        raise Exception(const.ErrorMessages.WORKFLOW_NAME_AND_ID_PROVIDED)
+
+    if not (args.workflow_id or args.workflow_name):
+        raise Exception(const.ErrorMessages.NO_WORKFLOW_INFO)
+
+    if args.workflow_id:
+        return args.workflow_id
+
+    possible_ids = api.get_workflows_by_name(args.workflow_name)
+
+    if len(possible_ids) == 0:
+        raise Exception(const.ErrorMessages.NO_WORKFLOW_FOR_NAME.format(
+            args.workflow_name))
+
+    return possible_ids[0]

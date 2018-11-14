@@ -24,12 +24,10 @@ import json
 import pytest
 
 from cms.translations.xtm import constants as const
-from cms.translations.xtm.projects_handler import (
-    create_project, upload_files, download_files,
-)
 from cms.translations.xtm.cli import (
     generate_token, handle_projects as main_project_handler,
 )
+from tests.utils import XtmMockArgs
 
 _CMD_START = ['python', '-m', 'cms.bin.xtm_translations']
 
@@ -42,39 +40,6 @@ _ENV_TOKEN_VALID[const.Token.ENV_VAR] = 'TheXTM-APIToken-VALID'
 _ENV_TOKEN_INVALID = dict(os.environ)
 _ENV_TOKEN_INVALID[const.Token.ENV_VAR] = 'TheXTM-APIToken-INVALID'
 
-
-class _CreationArgsNamespace:
-    def __init__(self):
-        pass
-
-    name = 'bar'
-    desc = 'foo'
-    client_id = 10
-    ref_id = 'faz'
-    workflow_id = 20
-    save_id = False
-    source_dir = None
-    projects_func = staticmethod(create_project)
-    source_lang = 'en_US'
-
-
-class _UploadArgsNamespace:
-    def __init__(self):
-        pass
-
-    source_dir = None
-    projects_func = staticmethod(upload_files)
-    no_overwrite = False
-
-
-class _DownloadArgsNamespace:
-    def __init__(self):
-        pass
-
-    source_dir = None
-    projects_func = staticmethod(download_files)
-
-
 _CREATION_ARGS_DEFAULT = ['--name', 'bar', '--desc', 'foo', '--client-id',
                           '10', '--ref-id', 'faz', '--workflow-id', '20']
 _CREATION_ARGS_INVALID_TYPE_1 = ['--name', 'bar', '--desc', 'foo',
@@ -83,6 +48,10 @@ _CREATION_ARGS_INVALID_TYPE_1 = ['--name', 'bar', '--desc', 'foo',
 _CREATION_ARGS_INVALID_TYPE_2 = ['--name', 'bar', '--desc', 'foo',
                                  '--client-id', '23', '--ref-id', 'faz',
                                  '--workflow-id', 'foo']
+
+_UploadArgsNamespace = XtmMockArgs.UploadArgsNamespace
+_CreationArgsNamespace = XtmMockArgs.CreationArgsNamespace
+_DownloadArgsNamespace = XtmMockArgs.DownloadArgsNamespace
 
 
 @pytest.fixture
@@ -99,8 +68,9 @@ def env_valid_token():
              '{login,create,upload,download} ...'),
     (['create', '-h'], 'usage: xtm_translations.py create [-h] --name NAME '
                        '--desc DESC --client-id CLIENT_ID --ref-id REF_ID '
-                       '--workflow-id WORKFLOW_ID [--source-lang SOURCE_LANG] '
-                       '[--save-id] [source_dir]'),
+                       '[--workflow-id WORKFLOW_ID] [--source-lang '
+                       'SOURCE_LANG] [--save-id] [--workflow-name '
+                       'WORKFLOW_NAME] [source_dir]'),
     (['upload', '-h'], 'usage: xtm_translations.py upload [-h] '
                        '[--no-overwrite] [source_dir]'),
     (['download', '-h'], 'usage: xtm_translations.py download [-h] '

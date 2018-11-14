@@ -131,24 +131,77 @@ class Converter:
         self._attribute_parser = AttributeParser(self.whitelist)
         self._seen_defaults = {}
 
-    def localize_string(
-            self, page, name, default, comment, localedata, escapes):
+    @utils.memoize
+    def _get_locale_data(self, page, locale=None):
+        if locale is None:
+            locale = self._params['locale']
+        return self._params['source'].read_locale(locale, page)
 
+    def localize_string(self, page, name, default, comment,
+                        escapes, default_required=True):
+        """Return translation for a string.
+
+        Parameters
+        ----------
+        page : str
+            Name of the page (to pick the translation file).
+        name : str
+            Name of the translation string (a.k.a. translation string id).
+        default : str
+            Default value to use if the translation is not found. This
+            typically comes from the page source.
+        comment : str
+            Comment for the translation string in the page source. This is
+            passed to `self._params['localized_string_callback']` but otherwise
+            ignored.
+        escapes : dict
+            Characters that should be escaped and their escaped values
+            appropriate for the output format.
+        default_required : bool
+            If this is true (default) and `default` is empty or None, and we
+            haven't seen the same string name before on the page, and the
+            default is not provided by the default locale translation file,
+            an exception will be thrown.
+
+        Returns
+        -------
+        localized_string : str
+            Localized string or default value.
+
+        Raises
+        ------
+        Exception
+            If the default is required but cannot be obtained.
+
+        """
         def escape(s):
             return ''.join(escapes.get(c, c) for c in s)
 
         def re_escape(s):
             return re.escape(escape(s))
 
-        # Handle duplicated strings
+        locale = self._params['locale']
+        localedata = self._get_locale_data(page, locale)
+        defaultlocale = self._params['defaultlocale']
+        default_localedata = self._get_locale_data(page, defaultlocale)
+
         if default:
+            # The default is provided in the page: remember it, in case the
+            # same string name is used again in this page.
             self._seen_defaults[(page, name)] = (default, comment)
+        elif (page, name) in self._seen_defaults:
+            # No default provided but we have seen this string name earlier in
+            # the page: reuse previous default.
+            default, comment = self._seen_defaults[(page, name)]
         else:
-            try:
-                default, comment = self._seen_defaults[(page, name)]
-            except KeyError:
-                raise Exception('Text not yet defined for string {} on page'
-                                ' {}'.format(name, page))
+            # No default and no memory: try to get string value from default
+            # locale translation file (see
+            # https://issues.adblockplus.org/ticket/6928 for more info).
+            default = default_localedata.get(name, None)
+
+        if not default and default_required:
+            raise Exception('Default text not provided for string {} on page '
+                            '{}'.format(name, page))
 
         full_default = default
         # Extract tag attributes from default string
@@ -156,8 +209,7 @@ class Converter:
             self._attribute_parser.parse(default, self._params['page']))
 
         # Get translation
-        locale = self._params['locale']
-        if locale == self._params['defaultlocale']:
+        if locale == defaultlocale:
             result = default
         elif name in localedata:
             result = localedata[name].strip()
@@ -228,8 +280,7 @@ class Converter:
             if default:
                 default = to_html(default).strip()
             return self.localize_string(self._params['page'], name, default,
-                                        comment, self._params['localedata'],
-                                        escapes)
+                                        comment, escapes)
 
         return re.sub(
             r'{{\s*'
@@ -406,9 +457,6 @@ class TemplateConverter(Converter):
         self._env.filters.update(filters)
         self._env.globals.update(globals)
 
-    def _get_locale_data(self, page):
-        return self._params['source'].read_locale(self._params['locale'], page)
-
     def get_html(self, source, filename):
         env = self._env
         code = env.compile(source, None, filename)
@@ -429,18 +477,15 @@ class TemplateConverter(Converter):
 
     def translate(self, default, name, comment=None):
         return jinja2.Markup(self.localize_string(
-            self._params['page'], name, default, comment,
-            self._params['localedata'], html_escapes,
+            self._params['page'], name, default, comment, html_escapes,
         ))
 
     def get_string(self, name, page=None):
         if page is None:
             page = self._params['page']
 
-        localedata = self._get_locale_data(page)
-        default = localedata[name]
         return jinja2.Markup(self.localize_string(
-            page, name, default, '', localedata, html_escapes,
+            page, name, None, '', html_escapes, default_required=False,
         ))
 
     def has_string(self, name, page=None):

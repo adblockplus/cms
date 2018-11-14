@@ -4,11 +4,11 @@ import runpy
 
 import mock
 import pytest
-import urllib2
 
 from .conftest import ROOTPATH
-from .utils import get_dir_contents, run_test_server
+from .utils import get_dir_contents, exception_test
 from cms.sources import FileSource
+from cms.bin.test_server import DynamicServerHandler
 
 
 def get_expected_outputs(test_type):
@@ -40,12 +40,6 @@ def static_output(request, temp_site):
     return static_out_path
 
 
-@pytest.fixture(scope='module')
-def dynamic_server(temp_site):
-    with run_test_server(temp_site) as ts:
-        yield ts
-
-
 @pytest.fixture(scope='session')
 def output_pages(static_output):
     return get_dir_contents(static_output)
@@ -59,12 +53,29 @@ def test_static(output_pages, filename, expected_output):
         assert expected_output == output_pages[filename]
 
 
-@pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)
-def test_dynamic(dynamic_server, filename, expected_output):
-    response = urllib2.urlopen(dynamic_server + filename)
-    assert expected_output == response.read().strip()
-
-
 def test_cache(output_pages):
     source = FileSource(os.path.join('test_site'))
     assert source.get_cache_dir() == os.path.join('test_site', 'cache')
+
+
+@pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)
+def test_dynamic_server_handler(filename, expected_output, temp_site):
+    def cleanup(page):
+        return page.replace(os.linesep, '').strip()
+
+    handler = DynamicServerHandler('localhost', 5000, str(temp_site))
+    environ = {'PATH_INFO': filename}
+
+    generated_page = handler(environ, lambda x, y: None)
+
+    assert cleanup(expected_output) == cleanup(generated_page[0])
+
+
+@pytest.mark.parametrize('page', ['en/translate', '/en/translate'])
+def test_dynamic_server_handler_with_conflicts(page, temp_site_with_conflicts):
+    handler = DynamicServerHandler('localhost', 5000,
+                                   str(temp_site_with_conflicts))
+    environ = {'PATH_INFO': page}
+    exp_msg = 'The requested page conflicts with another page.'
+
+    exception_test(handler, Exception, exp_msg, environ, lambda x, y: None)
