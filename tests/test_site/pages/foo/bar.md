@@ -1,5 +1,0 @@
-File used for to test the correct generation of pages within that 
-are located in some place other than root.
-
-It is also used to test the correct handling of a case where a 
-file is replaced by a directory of vice-versa.

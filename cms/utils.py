@@ -126,7 +126,7 @@ def extract_page_metadata(source):
 
 
 def get_page_params(source, locale, page, format=None, site_url_override=None,
-                    localized_string_callback=None):
+                    localized_string_callback=None, relative=None):
     from cms.converters import converters
 
     # Guess page format if omitted, but default to Markdown for friendlier exceptions
@@ -144,6 +144,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
         'page': page,
         'config': source.read_config(),
         'localized_string_callback': localized_string_callback,
+        'relative': relative,
     }
 
     params['localedata'] = source.read_locale(params['locale'], page)
@@ -190,9 +191,10 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
 
 
 def process_page(source, locale, page, format=None, site_url_override=None,
-                 localized_string_callback=None):
+                 localized_string_callback=None, relative=False):
     from cms.converters import TemplateConverter
 
     params = get_page_params(source, locale, page, format, site_url_override,
                              localized_string_callback)
+    params['relative'] = relative
     return TemplateConverter(*params['templatedata'], params=params)()

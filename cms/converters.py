@@ -19,6 +19,7 @@ import os
 import HTMLParser
 import re
 import urlparse
+from posixpath import relpath
 
 import jinja2
 import markdown
@@ -298,6 +299,12 @@ class Converter:
         )
 
     def process_links(self, text):
+        def make_relative(base_url, target):
+            if not target.startswith('/'):
+                # Links to an external resource
+                return target
+            return relpath(target, base_url.rsplit('/', 1)[0])
+
         def process_link(match):
             pre, attr, url, post = match.groups()
             url = jinja2.Markup(url).unescape()
@@ -311,6 +318,11 @@ class Converter:
                 if attr == 'href':
                     post += ' hreflang="{}"'\
                         .format(jinja2.Markup.escape(locale))
+
+            if self._params['relative']:
+                current_page = '/{}/{}'.format(self._params['locale'],
+                                               self._params['page'])
+                url = make_relative(current_page, url)
 
             return ''.join((pre, jinja2.Markup.escape(url), post))
 
