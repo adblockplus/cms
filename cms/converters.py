@@ -326,9 +326,7 @@ class Converter:
 
             return ''.join((pre, jinja2.Markup.escape(url), post))
 
-        text = re.sub(r'(<a\s[^<>]*\b(href)=\")([^<>\"]+)(\")',
-                      process_link, text)
-        text = re.sub(r'(<img\s[^<>]*\b(src)=\")([^<>\"]+)(\")',
+        text = re.sub(r'(<[\w]+\s[^<>]*\b(href|src)=\")([^<>\"]+)(\")',
                       process_link, text)
         return text
 
