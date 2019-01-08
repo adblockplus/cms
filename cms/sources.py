@@ -377,11 +377,11 @@ def create_source(path, cached=False):
     """
     source = FileSource(path)
 
-    config = source.read_config()
     try:
+        config = source.read_config()
         ap = config.get('paths', 'additional-paths').strip()
         additional_paths = filter(None, ap.split())
-    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, IOError):
         additional_paths = []
 
     if additional_paths:

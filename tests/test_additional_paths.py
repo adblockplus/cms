@@ -107,7 +107,6 @@ def test_create_source(tmpdir):
     two.join('two').write('')
 
     three.join('three').write('')
-    three.join('settings.ini').write('')
 
     four.join('four').write('')
     four.join('settings.ini').write('[paths]')
