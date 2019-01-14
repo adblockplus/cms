@@ -17,3 +17,6 @@ server unchanged. This is useful for images for example: a language-dependent
 image can be placed into the `locales/en` directory and a German version
 of the same image into the `locales/de` directory. E.g. the file
 `locales/en/foo.png` will be available on the server under the URL `/en/foo.png`.
+
+-----
+Prev: [Custom Jinja2 filters (`filters`)](filters.md) | Up: [Home](../../README.md) | Next: [Page layout templates (`templates`)](templates.md)

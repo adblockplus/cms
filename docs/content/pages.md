@@ -81,3 +81,6 @@ the page.
 Read the API documentation on [variables](../api/variables.md), 
 [global functions](../api/functions.md), and [custom filters](../api/filters.md) 
 that can be used on pages.
+
+-----
+Prev: [Various include files (`includes`)](includes.md) | Up: [Home](../../README.md) | Next: [Static content (`static`)](static.md)

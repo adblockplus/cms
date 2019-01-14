@@ -13,3 +13,6 @@ Run the following command from the directory of the `cms` repository:
 
 If successful, this will put the standalone test server into the `dist`
 directory.
+
+-----
+Prev: [Running the test server](test-server.md) | Up: [Home](../../README.md) | Next: [Generating static files](generate-static-files.md)

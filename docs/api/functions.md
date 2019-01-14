@@ -9,3 +9,6 @@ The following global functions can be used on pages:
   and params for the given page and locale. Locale defaults to the current one
   if not specified. Provided keys include `head`, `body`, `available_locales`
   and `translation_ratio`.
+
+-----
+Prev: [Custom filters](filters.md) | Up: [Home](../../README.md) | Next: [Home](../../README.md)

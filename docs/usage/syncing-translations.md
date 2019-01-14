@@ -33,3 +33,6 @@ Notes:
   translations for the pages already uploaded could be lost!)
 - If you are running the script from a cronjob or similar you will probably
   want to set the logging level to `ERROR` or similar
+
+-----
+Prev: [Generating static files](generate-static-files.md) | Up: [Home](../../README.md) | Next: [XTM Integration](xml-sync.md)

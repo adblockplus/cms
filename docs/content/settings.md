@@ -19,3 +19,6 @@ The following sections can be defined in `settings.ini`:
 * `[locale_overrides]`: every entry defines that a page should use a different
   locale file, not the one matching its name (to be used when multiple pages
   share localization data).
+
+-----
+Prev: [XTM Integration](../usage/xml-sync.md) | Up: [Home](../../README.md) | Next: [Custom Jinja2 global functions and variables (`globals`)](globals.md)

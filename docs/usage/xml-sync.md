@@ -111,3 +111,6 @@ additional libraries to run correctly:
 1. [Markdown](https://pypi.org/project/Markdown/)
 2. [Jinja2](https://pypi.org/project/Jinja2/)
 3. [Requests](https://pypi.org/project/requests/)
+
+-----
+Prev: [Syncing translations](syncing-translations.md) | Up: [Home](../../README.md) | Next: [Configuration (`settings.ini`)](../content/settings.md)

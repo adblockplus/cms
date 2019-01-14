@@ -6,3 +6,6 @@ unchanged. The file `static/css/foo.css` will be available under the URL
 
 Language-specific static files should be stored in the `locales` directory. 
 Read more about localization in the guide, [Localization files](locales.md).
+
+-----
+Prev: [User-visible pages (`pages`)](pages.md) | Up: [Home](../../README.md) | Next: [Variables](../api/variables.md)
