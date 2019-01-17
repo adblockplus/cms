@@ -442,6 +442,8 @@ class TemplateConverter(Converter):
             'get_page_content': self.get_page_content,
             'get_pages_metadata': self.get_pages_metadata,
             'get_canonical_url': self.get_canonical_url,
+            'get_page_url': self.get_page_url,
+            'page_has_locale': self.page_has_locale,
         }
 
         for dirname, dictionary in [('filters', filters),
@@ -587,6 +589,16 @@ class TemplateConverter(Converter):
             stack[-1]['subitems'].append(item)
             stack.append(item)
         return structured
+
+    def page_has_locale(self, page, locale):
+        return self._params['source'].has_locale(locale, page)
+
+    def get_page_url(self, page, locale=None, redirect=False):
+        if not locale:
+            locale = self._params['locale']
+        if self.page_has_locale(page, locale) or redirect:
+            return self._params['source'].resolve_link(page, locale)[1]
+        raise Exception('{} does not exist in {}'.format(page, locale))
 
 
 converters = {

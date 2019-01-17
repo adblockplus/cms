@@ -4,6 +4,6 @@ global_canonical_url = https://acme.com/global
 # link would not include the page name itself.
 filter_canonical_url = https://acme.com/
 
-page_url = /en/translate
+page_url = /de/translate
 
 page_url_redirect = /en/global
