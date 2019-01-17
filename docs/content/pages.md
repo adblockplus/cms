@@ -22,7 +22,7 @@ actual content.  The following settings can be changed:
   generated. By default a table of contents is always generated if the page
   contains any headers with an `id` attribute.
 
-For information on using includes on pages, read the guide on 
+For information on using includes on pages, read the guide on
 [Include files](includes.md)
 
 ## Markdown format (md) ##
@@ -78,9 +78,8 @@ any HTML code. Any content between `<head>` and `</head>` tags will be inserted
 into the head of the generated web page, everything else defined the content of
 the page.
 
-Read the API documentation on [variables](../api/variables.md), 
-[global functions](../api/functions.md), and [custom filters](../api/filters.md) 
+Read the API documentation on [variables](../api/variables.md),
+[global functions](../api/functions.md), and [custom filters](../api/filters.md)
 that can be used on pages.
 
------
 Prev: [Various include files (`includes`)](includes.md) | Up: [Home](../../README.md) | Next: [Static content (`static`)](static.md)
