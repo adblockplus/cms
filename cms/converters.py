@@ -551,7 +551,7 @@ class TemplateConverter(Converter):
                     if str(option) not in metadata[filter_name]:
                         return False
             elif filter_value != metadata[filter_name]:
-                    return False
+                return False
         return True
 
     def get_canonical_url(self, page):
