@@ -2,5 +2,17 @@
   "simple": {
     "description": "test",
     "message": "Translate"
+  },
+  "deleted": {
+    "description": "deleted-string",
+    "message": "I was deleted"
+  },
+  "also-deleted": {
+    "description": "another-deleted-string",
+    "message": "I was also deleted"
+  },
+  "fix-ts": {
+    "description": "fix",
+    "message": "Fix it {1}"
   }
 }

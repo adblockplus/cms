@@ -85,7 +85,10 @@ def update_local_files(page_strings, local_locales, default_locale):
         # Merge existing and current strings
         json_new = {}
 
-        keys = set(strings.keys() + json_old.keys())
+        keys = strings.keys()
+        for key in json_old.keys():
+            if key not in keys:
+                keys.append(key)
 
         for key in keys:
             row = {'file': page, 'key':key, 'flags': ''}
