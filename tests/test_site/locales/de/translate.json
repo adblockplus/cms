@@ -1,12 +1,4 @@
 {
-  "simple": {
-    "description": "test",
-    "message": "Übersetzen"
-  },
-  "fix-ts": {
-    "description": "fix",
-    "message": "Fester {1}"
-  },
   "nested-ts": {
     "message": "<a>Bar</a> und <a>Baz</a>"
   },
@@ -27,5 +19,13 @@
   },
   "entity-lnk": {
     "message": "<a>Bar</a>"
+  },
+  "simple": {
+    "description": "test",
+    "message": "Übersetzen"
+  },
+  "fix-ts": {
+    "description": "fix",
+    "message": "Fester {1}"
   }
 }
