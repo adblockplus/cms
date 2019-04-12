@@ -309,9 +309,9 @@ class Converter:
             pre, attr, url, post = match.groups()
             url = jinja2.Markup(url).unescape()
 
-            locale, new_url = (
-                self._params['source']
-                .resolve_link(url, self._params['locale']))
+            locale, new_url = self._params['source'].resolve_link(
+                url, self._params['locale'], self._params['page'],
+            )
 
             if new_url is not None:
                 url = new_url
@@ -516,7 +516,8 @@ class TemplateConverter(Converter):
         if locale is None:
             locale = self._params['locale']
 
-        locale, url = self._params['source'].resolve_link(page, locale)
+        locale, url = self._params['source'].resolve_link(page, locale,
+                                                          self._params['page'])
         return jinja2.Markup('<a{}>'.format(''.join(
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
@@ -563,7 +564,7 @@ class TemplateConverter(Converter):
                             '`get_canonical_url()`')
 
         locale, page_url = self._params['source'].resolve_link(
-            page, self._params['locale'],
+            page, self._params['locale'], self._params['page'],
         )
         # Remove the locale component that `resolve_link` adds at the
         # beginning.
@@ -597,7 +598,8 @@ class TemplateConverter(Converter):
         if not locale:
             locale = self._params['locale']
         if self.page_has_locale(page, locale) or redirect:
-            return self._params['source'].resolve_link(page, locale)[1]
+            return self._params['source'].resolve_link(page, locale,
+                                                       self._params['page'])[1]
         raise Exception('{} does not exist in {}'.format(page, locale))
 
 

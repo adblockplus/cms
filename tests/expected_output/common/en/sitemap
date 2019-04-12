@@ -3,6 +3,9 @@
 
 <h1> Unfiltered </h1>
 <ul>
+  <li>title : brokenlink </li>
+  <li>title : brokenlink-html </li>
+  <li>title : brokenlink-tmpl </li>
   <li>title : filter </li>
   <li>title : foo/bar </li>
   <li>title : get_page_url </li>
