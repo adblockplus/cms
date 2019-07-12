@@ -48,6 +48,10 @@ ERROR_TEMPLATE = '''
 # ignoring local files and Windows Registry.
 mimetypes.init([])
 
+# Manually initializing mimetypes causes the SVG type to be missing on some
+# systems, so we add it manually.
+mimetypes.add_type('image/svg+xml', '.svg')
+
 
 class DynamicServerHandler:
     """General-purpose WSGI server handler that generates pages on request.
