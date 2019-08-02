@@ -14,3 +14,6 @@ The following custom filters can be used on pages:
    are turned into additional HTML attributes for the tag.
 * `toclist(html)`: extracts a list of headings from HTML code, this can be used
   to generate a table of contents.
+
+-----
+Prev: [Variables](variables.md) | Up: [Home](../../README.md) | Next: [Global functions](functions.md)

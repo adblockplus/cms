@@ -11,3 +11,6 @@ The differences to pages using the same format are:
 
 By default, `default.tmpl` will be used for all pages. If other templates are
 defined, the pages need to choose them explicitly using the `template` setting.
+
+-----
+Prev: [Localization files (`locales`)](locales.md) | Up: [Home](../../README.md) | Next: [Various include files (`includes`)](includes.md)

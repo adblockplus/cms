@@ -27,3 +27,6 @@ e.g. the page the page `pages/example.md` will be accessible under
 Note that the test server is inefficient and shouldn't be run in production.
 There you should generate static files as explained in the next guide,
 [Generating Static Files](generate-static-files.md).
+
+-----
+Prev: [Home](../../README.md) | Up: [Home](../../README.md) | Next: [Generating the standalone test server](standalone-test-server.md)

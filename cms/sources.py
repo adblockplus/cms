@@ -27,7 +27,7 @@ from cms import utils
 
 
 class Source:
-    def resolve_link(self, url, locale):
+    def resolve_link(self, url, locale, source_page=None):
         parsed = urlparse.urlparse(url)
         page = parsed.path
         if parsed.scheme != '' or page.startswith('/') or page.startswith('.'):
@@ -59,7 +59,8 @@ class Source:
         elif self.has_static(page):
             locale = None
         else:
-            logging.warning('Link to %s cannot be resolved', page)
+            logging.warning('Link from "%s" to "%s" cannot be resolved',
+                            source_page, page)
 
         parts = page.split('/')
         if parts[-1] == default_page:
@@ -377,11 +378,11 @@ def create_source(path, cached=False):
     """
     source = FileSource(path)
 
-    config = source.read_config()
     try:
+        config = source.read_config()
         ap = config.get('paths', 'additional-paths').strip()
         additional_paths = filter(None, ap.split())
-    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, IOError):
         additional_paths = []
 
     if additional_paths:

@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import runpy
@@ -63,6 +64,20 @@ def test_static_relative(output_pages_relative, filename, expected_output):
 def test_cache(output_pages):
     source = FileSource(os.path.join('test_site'))
     assert source.get_cache_dir() == os.path.join('test_site', 'cache')
+
+
+def test_broken_link_warnings(temp_site, tmpdir_factory, caplog):
+    caplog.set_level(logging.WARNING)
+    generate_static_pages(temp_site, tmpdir_factory)
+    messages = {t[2] for t in caplog.record_tuples}
+    expected_messages = [
+        'Link from "brokenlink" to "missing" cannot be resolved',
+        'Link from "brokenlink-html" to "missing" cannot be resolved',
+        'Link from "brokenlink-tmpl" to "missing" cannot be resolved',
+    ]
+    for message in expected_messages:
+        assert message in messages
+    raise messages
 
 
 @pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)

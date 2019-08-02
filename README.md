@@ -42,6 +42,7 @@ There you should generate static files as explained below.
     - [Generating the standalone test server](docs/usage/standalone-test-server.md)
     - [Generating static files](docs/usage/generate-static-files.md)
     - [Syncing translations](docs/usage/syncing-translations.md)
+    - [XTM Integration](docs/usage/xml-sync.md)
 - Content structure
     - [Configuration (`settings.ini`)](docs/content/settings.md)
     - [Custom Jinja2 global functions and variables (`globals`)](docs/content/globals.md)

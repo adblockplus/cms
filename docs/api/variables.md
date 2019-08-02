@@ -11,3 +11,6 @@ The following variables can be used on pages:
   `settings.ini` (`general/siteurl`) during static generation and is equal to
   the test server URL (normally `http://localhost:5000`) when working with the
   test server.
+
+-----
+Prev: [Static content (`static`)](../content/static.md) | Up: [Home](../../README.md) | Next: [Custom filters](filters.md)

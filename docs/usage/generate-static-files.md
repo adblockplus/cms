@@ -29,3 +29,6 @@ are at least 30% complete. (Measured by comparing the total number
 of translatable strings on a page to the number of strings that have been
 translated for a given locale.) This is different from the test server which
 will include less complete translations.
+
+-----
+Prev: [Generating the standalone test server](standalone-test-server.md) | Up: [Home](../../README.md) | Next: [Syncing translations](syncing-translations.md)

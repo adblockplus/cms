@@ -309,9 +309,9 @@ class Converter:
             pre, attr, url, post = match.groups()
             url = jinja2.Markup(url).unescape()
 
-            locale, new_url = (
-                self._params['source']
-                .resolve_link(url, self._params['locale']))
+            locale, new_url = self._params['source'].resolve_link(
+                url, self._params['locale'], self._params['page'],
+            )
 
             if new_url is not None:
                 url = new_url
@@ -326,9 +326,7 @@ class Converter:
 
             return ''.join((pre, jinja2.Markup.escape(url), post))
 
-        text = re.sub(r'(<a\s[^<>]*\b(href)=\")([^<>\"]+)(\")',
-                      process_link, text)
-        text = re.sub(r'(<img\s[^<>]*\b(src)=\")([^<>\"]+)(\")',
+        text = re.sub(r'(<[\w]+\s[^<>]*\b(href|src)=\")([^<>\"]+)(\")',
                       process_link, text)
         return text
 
@@ -444,6 +442,8 @@ class TemplateConverter(Converter):
             'get_page_content': self.get_page_content,
             'get_pages_metadata': self.get_pages_metadata,
             'get_canonical_url': self.get_canonical_url,
+            'get_page_url': self.get_page_url,
+            'page_has_locale': self.page_has_locale,
         }
 
         for dirname, dictionary in [('filters', filters),
@@ -516,7 +516,8 @@ class TemplateConverter(Converter):
         if locale is None:
             locale = self._params['locale']
 
-        locale, url = self._params['source'].resolve_link(page, locale)
+        locale, url = self._params['source'].resolve_link(page, locale,
+                                                          self._params['page'])
         return jinja2.Markup('<a{}>'.format(''.join(
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
@@ -551,7 +552,7 @@ class TemplateConverter(Converter):
                     if str(option) not in metadata[filter_name]:
                         return False
             elif filter_value != metadata[filter_name]:
-                    return False
+                return False
         return True
 
     def get_canonical_url(self, page):
@@ -563,7 +564,7 @@ class TemplateConverter(Converter):
                             '`get_canonical_url()`')
 
         locale, page_url = self._params['source'].resolve_link(
-            page, self._params['locale'],
+            page, self._params['locale'], self._params['page'],
         )
         # Remove the locale component that `resolve_link` adds at the
         # beginning.
@@ -589,6 +590,17 @@ class TemplateConverter(Converter):
             stack[-1]['subitems'].append(item)
             stack.append(item)
         return structured
+
+    def page_has_locale(self, page, locale):
+        return self._params['source'].has_locale(locale, page)
+
+    def get_page_url(self, page, locale=None, redirect=False):
+        if not locale:
+            locale = self._params['locale']
+        if self.page_has_locale(page, locale) or redirect:
+            return self._params['source'].resolve_link(page, locale,
+                                                       self._params['page'])[1]
+        raise Exception('{} does not exist in {}'.format(page, locale))
 
 
 converters = {
