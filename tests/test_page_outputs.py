@@ -77,7 +77,6 @@ def test_broken_link_warnings(temp_site, tmpdir_factory, caplog):
     ]
     for message in expected_messages:
         assert message in messages
-    raise messages
 
 
 @pytest.mark.parametrize('filename,expected_output', dynamic_expected_outputs)
