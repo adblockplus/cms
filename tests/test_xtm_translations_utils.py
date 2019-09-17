@@ -28,6 +28,7 @@ from tests.utils import exception_test, XtmMockArgs
 
 _API_TOKEN_VALID = 'TheXTM-APIToken-VALID'
 _PROJECT_ID = 1234
+_API_URL = const.API_URL
 
 
 @pytest.fixture
@@ -157,7 +158,7 @@ def test_resolve_locales(intercept_populated, temp_site):
 
     In this environment, no languages have to be added.
     """
-    api = XTMCloudAPI(_API_TOKEN_VALID)
+    api = XTMCloudAPI(_API_TOKEN_VALID, _API_URL)
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
 
@@ -169,7 +170,7 @@ def test_resolve_locales_adds_langs(intercept, temp_site):
 
     In this environment, new target languages are added.
     """
-    api = XTMCloudAPI(_API_TOKEN_VALID)
+    api = XTMCloudAPI(_API_TOKEN_VALID, _API_URL)
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
     exp_targets = {'de_DE'}
@@ -185,7 +186,7 @@ def test_resolve_locales_raise_exception(intercept_populated, temp_site):
     In this environment, the API has more target languages configured than are
     available online. We except an exception to be raised.
     """
-    api = XTMCloudAPI(_API_TOKEN_VALID)
+    api = XTMCloudAPI(_API_TOKEN_VALID, _API_URL)
     api.add_target_languages(_PROJECT_ID, ['ro_RO'])
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
@@ -237,7 +238,7 @@ def test_handle_workflows(intercept, id_in, name, exp_err, exp_msg, exp_id):
     namespace.workflow_id = id_in
     namespace.workflow_name = name
 
-    api = XTMCloudAPI(_API_TOKEN_VALID)
+    api = XTMCloudAPI(_API_TOKEN_VALID, _API_URL)
 
     if exp_err:
         exception_test(utils.extract_workflow_id, exp_err, exp_msg, api,
@@ -254,3 +255,22 @@ def test_extract_unicode_strings(temp_site):
         strings = utils.extract_strings(fs)
 
     assert '\u0376' in strings['translate-unicode']['simple']['message']
+
+
+def test_get_api_url_from_arguments(temp_site):
+    with FileSource(temp_site) as fs:
+        args = XtmMockArgs.LoginArgsNamespace()
+        args.api_url = 'foo'
+
+        assert utils.get_api_url(args, fs) == 'foo'
+
+
+def test_get_api_url_from_source(temp_site_url_in_config):
+    with FileSource(temp_site_url_in_config) as fs:
+        url = utils.get_api_url(XtmMockArgs.LoginArgsNamespace, fs)
+        assert url == 'www.bar.com'
+
+
+def test_get_api_url_hardcoded():
+    assert utils.get_api_url(XtmMockArgs.LoginArgsNamespace, None) == \
+        const.API_URL

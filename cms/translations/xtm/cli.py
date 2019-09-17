@@ -28,17 +28,18 @@ import cms.translations.xtm.constants as const
 from cms.translations.xtm.projects_handler import (
     create_project, upload_files, download_files,
 )
-from cms.translations.xtm.utils import input_fn, read_token
+from cms.translations.xtm.utils import input_fn, read_token, get_api_url
 from cms.sources import create_source
 
 
 def handle_projects(args):
     try:
-        api = XTMCloudAPI(read_token())
+        token = read_token()
+        with create_source(args.source_dir, cached=True) as fs:
+            api = XTMCloudAPI(token, get_api_url(args, fs))
+            args.projects_func(args, api, fs)
     except Exception as err:
         sys.exit(err)
-    with create_source(args.source_dir, cached=True) as fs:
-        args.projects_func(args, api, fs)
 
 
 def generate_token(args):
@@ -49,7 +50,8 @@ def generate_token(args):
 
     logging.info(const.InfoMessages.GENERATING_TOKEN.format(username, user_id))
     try:
-        token = get_token(username, password, int(user_id))
+        token = get_token(username, password, int(user_id),
+                          get_api_url(args, None))
         logging.info(const.InfoMessages.TOKEN_GENERATED.format(token))
 
         cmd = const.Token.SAVE_COMMAND.format(const.Token.ENV_VAR, token)
@@ -67,6 +69,7 @@ def parse_args():
     #  Universal arguments
     parser.add_argument('-v', '--verbose', action='store_true',
                         help=const.ArgumentsHelp.VERBOSE)
+    parser.add_argument('--api-url', help=const.ArgumentsHelp.API_URL)
 
     #  Subparser for generating token
     token_parser = subparsers.add_parser('login',
@@ -157,7 +160,7 @@ def main():
     args = parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 
     args.func(args)
 

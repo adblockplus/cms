@@ -101,6 +101,7 @@ class ArgumentsHelp:
     PROJECT_SOURCE_DIR = 'The source directory of the website.'
     PROJECT_DOWNLOAD = ('Download the translation files from a project and '
                         'save them to disk.')
+    API_URL = 'The url used when connecting to the API.'
 
     class ProjectCreate:
         MAIN = 'Sub-mode used to create a new project with XTM Cloud.'
@@ -125,6 +126,7 @@ class Config:
     PROJECT_OPTION = 'project_id'
     MAIN_SECTION = 'general'
     DEFAULT_LOCALE_OPTION = 'defaultlocale'
+    URL_OPTION = 'url'
 
 
 SUPPORTED_LOCALES = (
@@ -173,3 +175,5 @@ UNDER_ANALYSIS_MESSAGE = ('403: {"reason":"Project is under analysis. '
                           'Please wait for analysis end."}')
 
 MAX_WAIT_TIME = 10
+
+API_URL = 'https://wstest2.xtm-intl.com/rest-api/'

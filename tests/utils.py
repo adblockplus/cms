@@ -161,6 +161,7 @@ class XtmMockArgs:
         projects_func = staticmethod(create_project)
         source_lang = 'en_US'
         workflow_name = None
+        api_url = None
 
     class UploadArgsNamespace:
         """Mock arguments for uploading files to XTM for translation."""
@@ -168,9 +169,16 @@ class XtmMockArgs:
         source_dir = None
         projects_func = staticmethod(upload_files)
         no_overwrite = False
+        api_url = None
 
     class DownloadArgsNamespace:
         """Mock arguments for downloading translation from XTM."""
 
         source_dir = None
         projects_func = staticmethod(download_files)
+        api_url = None
+
+    class LoginArgsNamespace:
+        """Mock arguments for generating a new token."""
+
+        api_url = None

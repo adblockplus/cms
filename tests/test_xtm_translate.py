@@ -64,7 +64,7 @@ def env_valid_token():
 
 @pytest.mark.script_launch_mode('subprocess')
 @pytest.mark.parametrize('args,exp_msg', [
-    (['-h'], 'usage: xtm_translations.py [-h] [-v] '
+    (['-h'], 'usage: xtm_translations.py [-h] [-v] [--api-urlAPI_URL]'
              '{login,create,upload,download} ...'),
     (['create', '-h'], 'usage: xtm_translations.py create [-h] --name NAME '
                        '--desc DESC --customer-id CUSTOMER_ID --ref-id REF_ID '
@@ -116,12 +116,12 @@ def test_default_source_directory(args, script_runner):
      const.ErrorMessages.NO_TOKEN_PROVIDED.split('\n')[0]),
     ('str(temp_site_valid_project)', _CREATION_ARGS_DEFAULT, _ENV_TOKEN_VALID,
      const.ErrorMessages.PROJECT_EXISTS.format(1234)),
-    ('str(temp_site)', _CREATION_ARGS_DEFAULT, _ENV_TOKEN_INVALID,
+    ('str(temp_site_no_project)', _CREATION_ARGS_DEFAULT, _ENV_TOKEN_INVALID,
      'Authentication failed'),
 ])
 def test_creation_error_messages(temp_site, intercept, script_runner, args,
                                  source_dir, temp_site_valid_project, env,
-                                 exp_msg):
+                                 exp_msg, temp_site_no_project):
     """Test if error cases are treated correctly when creating a project."""
     cmd = list(_CMD_START)
     cmd.extend(['create', eval(source_dir)])
@@ -172,7 +172,7 @@ def test_login(intercept, monkeypatch, capsys):
     )
     monkeypatch.setattr('getpass.getpass', lambda prompt: 'pass')
 
-    generate_token(None)
+    generate_token(XtmMockArgs.LoginArgsNamespace)
     out, err = capsys.readouterr()
 
     assert err == ''
@@ -188,7 +188,7 @@ def test_login_wrong_credentials(intercept, monkeypatch, capsys):
     monkeypatch.setattr('getpass.getpass', lambda prompt: 'pass')
     monkeypatch.setattr('sys.exit', lambda x: sys.stderr.write(str(x)))
 
-    generate_token(None)
+    generate_token(XtmMockArgs.LoginArgsNamespace)
     out, err = capsys.readouterr()
 
     assert 'Invalid credentials' in err
@@ -219,11 +219,11 @@ def test_upload_too_many_languages(intercept_too_many_targets,
     namespace = _UploadArgsNamespace()
     namespace.source_dir = str(temp_site_valid_project)
 
-    with pytest.raises(Exception) as err:
+    with pytest.raises(SystemExit) as err:
         main_project_handler(namespace)
 
-    assert 'languages are enabled in the API, but not listed in locales' in \
-           str(err.value)
+    assert ('languages are enabled in the API, but not listed in locales' in
+            str(err.value))
 
 
 def test_upload_successful(intercept, env_valid_token,

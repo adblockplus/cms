@@ -16,6 +16,11 @@
 from __future__ import unicode_literals
 
 import json
+try:
+    import urlparse
+except ImportError:
+    # It's Python 3
+    import urllib.parse as urlparse
 
 import requests
 
@@ -76,17 +81,19 @@ class XTMCloudAPI(object):
         ADD_TARGET_LANGS = 200
         GET_WORKFLOW_IDS = 200
 
-    def __init__(self, token):
+    def __init__(self, token, base_url):
         """Constructor.
 
         Parameters
         ----------
         token: str
             Token used to authenticate with the API.
+        base_url: str
+            Url used to connect to the API.
 
         """
         self._token = token
-        self.base_url = _BASE_URL
+        self.base_url = base_url
 
     def _execute(self, url, data=None, files=None, stream=False,
                  params=None, headers=None):
@@ -218,7 +225,7 @@ class XTMCloudAPI(object):
             # Hacky way to go around 415 error code
             files_to_upload = {'a': 'b'}
 
-        url = self.base_url + self._UrlPaths.CREATE
+        url = urlparse.urljoin(self.base_url, self._UrlPaths.CREATE)
 
         response = self._execute(url, data=data, files=files_to_upload)
 
@@ -275,7 +282,9 @@ class XTMCloudAPI(object):
         data = {'matchType': self._MATCH_TYPE[overwrite]}
         data.update(file_names)
 
-        url = self.base_url + self._UrlPaths.UPLOAD.format(project_id)
+        url = urlparse.urljoin(
+            self.base_url, self._UrlPaths.UPLOAD.format(project_id),
+        )
 
         response = self._execute(url, data=data, files=files_to_upload)
 
@@ -307,7 +316,9 @@ class XTMCloudAPI(object):
             If the request is flawed in any way.
 
         """
-        url = (self.base_url + self._UrlPaths.DOWNLOAD).format(project_id)
+        url = urlparse.urljoin(
+            self.base_url, self._UrlPaths.DOWNLOAD.format(project_id),
+        )
 
         exception_msg = {
             400: 'Invalid request',
@@ -347,8 +358,8 @@ class XTMCloudAPI(object):
             If the request is unsuccessful.
 
         """
-        url = (self.base_url + self._UrlPaths.GET_TARGET_LANG).format(
-            project_id,
+        url = urlparse.urljoin(
+            self.base_url, self._UrlPaths.GET_TARGET_LANG.format(project_id),
         )
 
         response = self._execute(url, stream=True)
@@ -379,9 +390,11 @@ class XTMCloudAPI(object):
         data = json.dumps({
             'targetLanguages': target_languages,
         })
-        url = (self.base_url + self._UrlPaths.ADD_TARGET_LANG).format(
-            project_id,
+
+        url = urlparse.urljoin(
+            self.base_url, self._UrlPaths.ADD_TARGET_LANG.format(project_id),
         )
+
         headers = {'content-type': 'application/json'}
 
         response = self._execute(url, data=data, headers=headers)
@@ -404,7 +417,7 @@ class XTMCloudAPI(object):
             Of workflow ids that match the name provided.
 
         """
-        url = self.base_url + self._UrlPaths.GET_WORKFLOW_IDS
+        url = urlparse.urljoin(self.base_url, self._UrlPaths.GET_WORKFLOW_IDS)
 
         response = self._execute(url, params={'name': name})
 
@@ -420,7 +433,7 @@ class XTMCloudAPI(object):
         return valid_ids
 
 
-def get_token(username, password, user_id):
+def get_token(username, password, user_id, base_url):
     """Generate an API token from username and password.
 
     Parameters
@@ -431,6 +444,8 @@ def get_token(username, password, user_id):
         The password used to generate the token.
     user_id: int
         The user ID used to generate the token.
+    base_url: str
+        The url used to connect to the API
 
     Returns
     -------
@@ -449,7 +464,7 @@ def get_token(username, password, user_id):
         'userId': user_id,
     })
 
-    url = _BASE_URL + 'auth/token'
+    url = urlparse.urljoin(base_url, 'auth/token')
 
     headers = {'content-type': 'application/json'}
 

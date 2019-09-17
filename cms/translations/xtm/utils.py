@@ -20,6 +20,7 @@ import logging
 import os
 import time
 import json
+import ConfigParser
 
 from cms.utils import process_page
 import cms.translations.xtm.constants as const
@@ -487,3 +488,41 @@ def extract_workflow_id(api, args):
             args.workflow_name))
 
     return possible_ids[0]
+
+
+def get_api_url(args, source):
+    """Extract the appropriate API url to be used.
+
+    In order of priority, from highest to lowest, the returned url will be:
+
+        1. As an argument of the script: `--api-url`
+        2. The url from `settings.ini`, under `XTM` section and `url` option
+        (If `source` is not None)
+        3. The hardcoded url, from `constants.API_URL`
+
+
+    Parameters
+    ----------
+    args: argparse.Namespace
+        The script arguments.
+    source: FileSource
+        Representing the website to get the url for.
+
+    Returns
+    -------
+    str
+        With the API url.
+
+    """
+    if args.api_url:
+        return args.api_url
+
+    if source is None:
+        return const.API_URL
+
+    config = source.read_config()
+
+    try:
+        return config.get(const.Config.XTM_SECTION, const.Config.URL_OPTION)
+    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+        return const.API_URL

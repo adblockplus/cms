@@ -25,6 +25,7 @@ import pytest
 
 from cms.translations.xtm.xtm_api import (XTMCloudException, XTMCloudAPI,
                                           get_token)
+from cms.translations.xtm.constants import API_URL
 from tests.utils import exception_test
 
 _VALID_TOKEN = 'TheXTM-APIToken-VALID'
@@ -41,11 +42,12 @@ _EXPECTED_JOBS = [{'fileName': 'test.json', 'jobId': 1,
 ])
 def test_token_generation(intercept, credentials, is_ok, err_msg, exp_token):
     """Test the API token generation."""
+    args = credentials + [API_URL]
     if is_ok:
-        token = get_token(*credentials)
+        token = get_token(*args)
         assert token == exp_token
     else:
-        exception_test(get_token, XTMCloudException, err_msg, *credentials)
+        exception_test(get_token, XTMCloudException, err_msg, *args)
 
 
 @pytest.mark.parametrize('token,args,files,exp_msg,exp_jobs', [
@@ -58,7 +60,7 @@ def test_token_generation(intercept, credentials, is_ok, err_msg, exp_token):
 ])
 def test_project_creation(intercept, token, files, args, exp_msg, exp_jobs):
     """Test creation of files behaves appropriately."""
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
 
     if exp_msg:
         exception_test(api.create_project, XTMCloudException, exp_msg, *args)
@@ -76,7 +78,7 @@ def test_project_creation(intercept, token, files, args, exp_msg, exp_jobs):
 def test_extracting_target_languages(intercept, token, project_id,
                                      exp_langs, exp_msg):
     """Test extraction of target languages."""
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
 
     if exp_msg:
         exception_test(api.get_target_languages, XTMCloudException, exp_msg,
@@ -96,7 +98,7 @@ def test_extracting_target_languages(intercept, token, project_id,
 def test_adding_target_language(intercept, token, project_id, new_langs,
                                 exp_msg):
     """Test adding target languages."""
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
 
     if exp_msg:
         exception_test(api.add_target_languages, XTMCloudException, exp_msg,
@@ -112,7 +114,7 @@ def test_adding_target_language(intercept, token, project_id, new_langs,
 ])
 def test_file_download(intercept_populated, token, project_id, exp_msg):
     """Test file downloading."""
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
 
     if exp_msg:
         exception_test(api.download_files, XTMCloudException, exp_msg,
@@ -133,7 +135,7 @@ def test_file_download(intercept_populated, token, project_id, exp_msg):
 def test_file_upload(intercept, token, project_id, files, exp_err, exp_msg,
                      exp_jobs):
     """Test file uploading."""
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
     if exp_msg is not None:
         exception_test(api.upload_files, exp_err, exp_msg, files, project_id)
     else:
@@ -147,7 +149,7 @@ def test_file_upload(intercept, token, project_id, files, exp_err, exp_msg,
 ])
 def test_workflow_id_extraction(intercept, token, name, exp_err,
                                 exp_msg, exp_ids):
-    api = XTMCloudAPI(token)
+    api = XTMCloudAPI(token, API_URL)
     if exp_msg is not None:
         exception_test(api.get_workflows_by_name, exp_err, exp_msg, name)
     else:

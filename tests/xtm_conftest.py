@@ -76,6 +76,29 @@ def temp_site_function_scope(tmpdir):
 
 
 @pytest.fixture
+def temp_site_url_in_config(tmpdir):
+    out_dir = tmpdir.mkdir('temp_site_url')
+    site_dir = out_dir.join('test_site').strpath
+
+    shutil.copytree(os.path.join(ROOTPATH, 'tests', 'test_site'), site_dir)
+
+    with FileSource(str(site_dir)) as fs:
+        fs.write_to_config('XTM', 'url', 'www.bar.com')
+
+    return site_dir
+
+
+@pytest.fixture
+def temp_site_no_project(tmpdir):
+    out_dir = tmpdir.mkdir('temp_site_url')
+    site_dir = out_dir.join('test_site').strpath
+
+    shutil.copytree(os.path.join(ROOTPATH, 'tests', 'test_site'), site_dir)
+
+    return site_dir
+
+
+@pytest.fixture
 def intercept():
     app = get_configured_app()
     requests_intercept.install()
