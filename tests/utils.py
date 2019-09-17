@@ -153,7 +153,7 @@ class XtmMockArgs:
 
         name = 'bar'
         desc = 'foo'
-        client_id = 10
+        customer_id = 10
         ref_id = 'faz'
         workflow_id = 20
         save_id = False

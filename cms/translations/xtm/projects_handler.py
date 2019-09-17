@@ -70,7 +70,7 @@ def create_project(args, api, source):
             description=args.desc,
             reference_id=args.ref_id,
             target_languages=target_langs,
-            customer_id=args.client_id,
+            customer_id=args.customer_id,
             workflow_id=utils.extract_workflow_id(api, args),
             source_language=args.source_lang,
             files=files_to_upload,

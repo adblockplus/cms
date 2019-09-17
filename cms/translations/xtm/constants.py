@@ -106,7 +106,7 @@ class ArgumentsHelp:
         MAIN = 'Sub-mode used to create a new project with XTM Cloud.'
         NAME = 'The name of the project will have once created.'
         DESC = 'TBD'
-        CLIENT_ID = 'TBD'
+        CUSTOMER_ID = 'TBD'
         REF_ID = 'TBD'
         WORKFLOW_ID = 'TBD'
         SOURCE = 'The source language for this project. Default "en_US".'

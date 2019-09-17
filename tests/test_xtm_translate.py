@@ -40,13 +40,13 @@ _ENV_TOKEN_VALID[const.Token.ENV_VAR] = 'TheXTM-APIToken-VALID'
 _ENV_TOKEN_INVALID = dict(os.environ)
 _ENV_TOKEN_INVALID[const.Token.ENV_VAR] = 'TheXTM-APIToken-INVALID'
 
-_CREATION_ARGS_DEFAULT = ['--name', 'bar', '--desc', 'foo', '--client-id',
+_CREATION_ARGS_DEFAULT = ['--name', 'bar', '--desc', 'foo', '--customer-id',
                           '10', '--ref-id', 'faz', '--workflow-id', '20']
 _CREATION_ARGS_INVALID_TYPE_1 = ['--name', 'bar', '--desc', 'foo',
-                                 '--client-id', 'foo', '--ref-id', 'faz',
+                                 '--customer-id', 'foo', '--ref-id', 'faz',
                                  '--workflow-id', '3']
 _CREATION_ARGS_INVALID_TYPE_2 = ['--name', 'bar', '--desc', 'foo',
-                                 '--client-id', '23', '--ref-id', 'faz',
+                                 '--customer-id', '23', '--ref-id', 'faz',
                                  '--workflow-id', 'foo']
 
 _UploadArgsNamespace = XtmMockArgs.UploadArgsNamespace
@@ -67,7 +67,7 @@ def env_valid_token():
     (['-h'], 'usage: xtm_translations.py [-h] [-v] '
              '{login,create,upload,download} ...'),
     (['create', '-h'], 'usage: xtm_translations.py create [-h] --name NAME '
-                       '--desc DESC --client-id CLIENT_ID --ref-id REF_ID '
+                       '--desc DESC --customer-id CUSTOMER_ID --ref-id REF_ID '
                        '[--workflow-id WORKFLOW_ID] [--source-lang '
                        'SOURCE_LANG] [--save-id] [--workflow-name '
                        'WORKFLOW_NAME] [source_dir]'),
@@ -89,7 +89,7 @@ def test_usage_messages(args, exp_msg, script_runner):
 
 @pytest.mark.script_launch_mode('subprocess')
 @pytest.mark.parametrize('args', [
-    ['create', '--name', 'bar', '--desc', 'foo', '--client-id', '1',
+    ['create', '--name', 'bar', '--desc', 'foo', '--customer-id', '1',
      '--ref-id', 'faz', '--workflow-id', '3'],
     ['upload'],
     ['download'],
@@ -109,7 +109,7 @@ def test_default_source_directory(args, script_runner):
 @pytest.mark.script_launch_mode('subprocess')
 @pytest.mark.parametrize('source_dir,args,env,exp_msg', [
     ('str(temp_site)', _CREATION_ARGS_INVALID_TYPE_1, _ENV_NO_TOKEN,
-     "--client-id: invalid int value: 'foo'"),
+     "--customer-id: invalid int value: 'foo'"),
     ('str(temp_site)', _CREATION_ARGS_INVALID_TYPE_2, _ENV_NO_TOKEN,
      "--workflow-id: invalid int value: 'foo'"),
     ('str(temp_site)', _CREATION_ARGS_DEFAULT, _ENV_NO_TOKEN,
@@ -168,7 +168,7 @@ def test_login(intercept, monkeypatch, capsys):
                                                  'TheXTM-APIToken-VALID')
     monkeypatch.setattr(
         'cms.translations.xtm.cli.input_fn',
-        lambda inp: 'admin' if 'username' in inp.lower() else '20',
+        lambda inp: 'admin' if 'client name' in inp.lower() else '20',
     )
     monkeypatch.setattr('getpass.getpass', lambda prompt: 'pass')
 
@@ -183,7 +183,7 @@ def test_login_wrong_credentials(intercept, monkeypatch, capsys):
     """Test exception handling when generating the tokens."""
     monkeypatch.setattr(
         'cms.translations.xtm.cli.input_fn',
-        lambda inp: 'foo' if 'username' in inp.lower() else '50',
+        lambda inp: 'foo' if 'client name' in inp.lower() else '50',
     )
     monkeypatch.setattr('getpass.getpass', lambda prompt: 'pass')
     monkeypatch.setattr('sys.exit', lambda x: sys.stderr.write(str(x)))

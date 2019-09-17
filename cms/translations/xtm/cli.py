@@ -43,9 +43,9 @@ def handle_projects(args):
 
 def generate_token(args):
     """Generate an API token from username and password."""
-    username = input_fn('Username: ')
+    username = input_fn('Client name: ')
     user_id = input_fn('User ID: ')
-    password = getpass.getpass(prompt='Pasword: ')
+    password = getpass.getpass(prompt='Password: ')
 
     logging.info(const.InfoMessages.GENERATING_TOKEN.format(username, user_id))
     try:
@@ -96,8 +96,8 @@ def parse_args():
     )
 
     project_create_parser.add_argument(
-        '--client-id', required=True, type=int,
-        help=const.ArgumentsHelp.ProjectCreate.CLIENT_ID,
+        '--customer-id', required=True, type=int,
+        help=const.ArgumentsHelp.ProjectCreate.CUSTOMER_ID,
     )
     project_create_parser.add_argument(
         '--ref-id', required=True,
