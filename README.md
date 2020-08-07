@@ -28,7 +28,7 @@ Run the `runserver.py` script from your content directory, e.g.:
 
 Alternatively, the content directory could also be specified as command line
 parameter of `runserver.py`. This will start a local web server on port 5000,
-e.g. the page the page `pages/example.md` will be accessible under
+e.g. the page `pages/example.md` will be accessible under
 `http://localhost:5000/en/example`.
 
 Note that the test server is inefficient and shouldn't be run in production.
