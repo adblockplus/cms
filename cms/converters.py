@@ -121,7 +121,7 @@ class AttributeParser(HTMLParser.HTMLParser):
 
 
 class Converter:
-    whitelist = {'a', 'em', 'sup', 'strong', 'code', 'span', 'small', 'br'}
+    whitelist = {'a', 'em', 'sup', 'strong', 'code', 'span', 'small'}
     missing_translations = 0
     total_translations = 0
 
