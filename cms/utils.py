@@ -131,7 +131,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
 
     # Guess page format if omitted, but default to Markdown for friendlier exceptions
     if format is None:
-        for format in converters.iterkeys():
+        for format in converters.keys():
             if source.has_page(page, format):
                 break
         else:

@@ -15,12 +15,12 @@
 
 import io
 import collections
-import ConfigParser
+import configparser
 import json
 import os
-from StringIO import StringIO
+from io import StringIO
 from random import randint
-import urlparse
+import urllib.parse
 import logging
 
 from cms import utils
@@ -28,7 +28,7 @@ from cms import utils
 
 class Source:
     def resolve_link(self, url, locale, source_page=None):
-        parsed = urlparse.urlparse(url)
+        parsed = urllib.parse.urlparse(url)
         page = parsed.path
         if parsed.scheme != '' or page.startswith('/') or page.startswith('.'):
             # Not a page link
@@ -67,20 +67,20 @@ class Source:
             page = '/'.join(parts[:-1])
         if locale:
             path = '/{}/{}'.format(locale, page)
-            return locale, urlparse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
+            return locale, urllib.parse.urlunparse(parsed[0:2] + (path,) + parsed[3:])
         return locale, '/' + page
 
     def read_config(self):
         configdata = self.read_file('settings.ini')[0]
-        config = ConfigParser.SafeConfigParser()
-        config.readfp(StringIO(configdata))
+        config = configparser.ConfigParser()
+        config.read_file(StringIO(configdata))
         return config
 
     def exec_file(self, filename):
         source, filename = self.read_file(filename)
         code = compile(source, filename, 'exec')
         namespace = {}
-        exec code in namespace
+        exec(code, namespace)
         return namespace
 
     #
@@ -102,7 +102,7 @@ class Source:
             from cms.converters import converters
             return any(
                 self.has_page(page, format)
-                for format in converters.iterkeys()
+                for format in converters.keys()
             )
         else:
             return self.has_file(self.page_filename(page, format))
@@ -120,8 +120,7 @@ class Source:
 
     def list_localizable_files(self):
         default_locale = self.read_config().get('general', 'defaultlocale')
-        return filter(lambda f: os.path.splitext(f)[1].lower() != '.json',
-                      self.list_files('locales/%s' % default_locale))
+        return [f for f in self.list_files('locales/%s' % default_locale) if os.path.splitext(f)[1].lower() != '.json']
 
     def has_localizable_file(self, locale, filename):
         return self.has_file(self.localizable_file_filename(locale, filename))
@@ -154,7 +153,7 @@ class Source:
         config = self.read_config()
         try:
             page = config.get('locale_overrides', page)
-        except ConfigParser.Error:
+        except configparser.Error:
             pass
         return self.localizable_file_filename(locale, page + '.json')
 
@@ -180,7 +179,7 @@ class Source:
             filedata, filepath = self.read_file(filename)
             try:
                 localedata = json.loads(filedata)
-                for key, value in localedata.iteritems():
+                for key, value in localedata.items():
                     result[key] = value['message']
             except KeyError as ke:
                 if ke.message != 'message':
@@ -279,7 +278,7 @@ class FileSource(Source):
         config = self.read_config()
         try:
             config.set(section, option, value)
-        except ConfigParser.NoSectionError:
+        except configparser.NoSectionError:
             config.add_section(section)
             config.set(section, option, value)
         with open(self.get_path('settings.ini'), 'w') as cnf:
@@ -381,8 +380,8 @@ def create_source(path, cached=False):
     try:
         config = source.read_config()
         ap = config.get('paths', 'additional-paths').strip()
-        additional_paths = filter(None, ap.split())
-    except (ConfigParser.NoSectionError, ConfigParser.NoOptionError, IOError):
+        additional_paths = [_f for _f in ap.split() if _f]
+    except (configparser.NoSectionError, configparser.NoOptionError, IOError):
         additional_paths = []
 
     if additional_paths:

@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import os
-from ConfigParser import SafeConfigParser
+from configparser import ConfigParser
 import io
 import sys
 import json
@@ -146,12 +146,12 @@ def test_creation_save_id(temp_site, intercept, env_valid_token):
     namespace.source_dir = str(temp_site)
     namespace.save_id = True
     main_project_handler(namespace)
-    cnf = SafeConfigParser()
+    cnf = ConfigParser()
     try:
         with io.open(os.path.join(temp_site, 'settings.ini'),
                      encoding='utf-8') as f:
             cnf_data = f.read()
-            cnf.readfp(io.StringIO(cnf_data))
+            cnf.read_file(io.StringIO(cnf_data))
             project_id = cnf.get(const.Config.XTM_SECTION,
                                  const.Config.PROJECT_OPTION)
 
@@ -165,7 +165,7 @@ def test_creation_save_id(temp_site, intercept, env_valid_token):
 def test_login(intercept, monkeypatch, capsys):
     """Test if the login functionality works as expected."""
     exp_output = const.Token.SAVE_COMMAND.format(const.Token.ENV_VAR,
-                                                 'TheXTM-APIToken-VALID')
+                                                 "b'TheXTM-APIToken-VALID'")
     monkeypatch.setattr(
         'cms.translations.xtm.cli.input_fn',
         lambda inp: 'admin' if 'client name' in inp.lower() else '20',

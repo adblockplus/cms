@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import os
-import HTMLParser
+import html.parser
 import re
-import urlparse
+import urllib.parse
 from posixpath import relpath
 
 import jinja2
@@ -48,13 +48,14 @@ html_escapes = {
 }
 
 
-class AttributeParser(HTMLParser.HTMLParser):
+class AttributeParser(html.parser.HTMLParser):
     _string = None
     _inside_fixed = False
     _fixed_strings = None
     _attrs = None
 
     def __init__(self, whitelist):
+        super().__init__()
         self._whitelist = whitelist
 
     def parse(self, text, pagename):
@@ -336,7 +337,7 @@ class Converter:
     def resolve_includes(self, text):
         def resolve_include(match):
             name = match.group(1)
-            for format_, converter_class in converters.iteritems():
+            for format_, converter_class in converters.items():
                 if self._params['source'].has_include(name, format_):
                     data, filename = (
                         self._params['source'].read_include(name, format_))
@@ -388,7 +389,7 @@ class MarkdownConverter(Converter):
 
     def get_html(self, source, filename):
         def remove_unnecessary_entities(match):
-            char = unichr(int(match.group(1)))
+            char = chr(int(match.group(1)))
             if char in html_escapes:
                 return match.group(0)
             return char
@@ -399,7 +400,7 @@ class MarkdownConverter(Converter):
         ])
         for char in md.ESCAPED_CHARS:
             escapes[char] = '&#{};'.format(str(ord(char)))
-        for key, value in html_escapes.iteritems():
+        for key, value in html_escapes.items():
             escapes[key] = value
 
         md.preprocessors['html_block'].markdown_in_raw = True
@@ -479,11 +480,11 @@ class TemplateConverter(Converter):
         except Exception:
             env.handle_exception()
 
-        for key, value in module.__dict__.iteritems():
+        for key, value in module.__dict__.items():
             if not key.startswith('_'):
                 self._params[key] = value
 
-        result = unicode(module)
+        result = str(module)
         result = self.process_links(result)
         return result
 
@@ -522,7 +523,7 @@ class TemplateConverter(Converter):
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
                 ('hreflang', locale),
-            ] + attrs.items()
+            ] + list(attrs.items())
         )))
 
     def get_pages_metadata(self, filters=None):
@@ -542,11 +543,11 @@ class TemplateConverter(Converter):
     def filter_metadata(self, filters, metadata):
         if filters is None:
             return True
-        for filter_name, filter_value in filters.items():
+        for filter_name, filter_value in list(filters.items()):
             if filter_name not in metadata:
                 return False
             if isinstance(metadata[filter_name], list):
-                if isinstance(filter_value, basestring):
+                if isinstance(filter_value, str):
                     filter_value = [filter_value]
                 for option in filter_value:
                     if str(option) not in metadata[filter_name]:
@@ -569,7 +570,7 @@ class TemplateConverter(Converter):
         # Remove the locale component that `resolve_link` adds at the
         # beginning.
         page_url = page_url[len(locale) + 1:]
-        return urlparse.urljoin(base_url, page_url)
+        return urllib.parse.urljoin(base_url, page_url)
 
     def toclist(self, content):
         toc_re = r'<h(\d)\s[^<>]*\bid="([^<>"]+)"[^<>]*>(.*?)</h\1>'

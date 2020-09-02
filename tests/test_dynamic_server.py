@@ -1,5 +1,5 @@
 import pytest
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import os
 
 from tests.test_page_outputs import dynamic_expected_outputs
@@ -32,9 +32,9 @@ def dynamic_server_builtins(temp_site, tmpdir):
 @pytest.mark.slowtest
 def test_dynamic_werkzeug_good_page(dynamic_server_werkzeug):
     filename, expected_output = dynamic_expected_outputs[0]
-    response = urllib2.urlopen(dynamic_server_werkzeug + filename)
+    response = urllib.request.urlopen(dynamic_server_werkzeug + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output in response.read().decode('utf-8').strip()
 
 
 @pytest.mark.slowtest
@@ -42,16 +42,16 @@ def test_dynamic_werkzeug_not_found(dynamic_server_werkzeug):
     filename = 'en/no-page-here'
     exp_msg = 'Not Found'
 
-    exception_test(urllib2.urlopen, urllib2.HTTPError, exp_msg,
+    exception_test(urllib.request.urlopen, urllib.error.HTTPError, exp_msg,
                    dynamic_server_werkzeug + filename)
 
 
 @pytest.mark.slowtest
 def test_dynamic_builtins_good_page(dynamic_server_builtins):
     filename, expected_output = dynamic_expected_outputs[0]
-    response = urllib2.urlopen(dynamic_server_builtins + filename)
+    response = urllib.request.urlopen(dynamic_server_builtins + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output in response.read().decode('utf-8').strip()
 
 
 @pytest.mark.slowtest
@@ -59,5 +59,5 @@ def test_dynamic_builtins_not_found(dynamic_server_builtins):
     filename = 'en/no-page-here'
     exp_msg = 'Not Found'
 
-    exception_test(urllib2.urlopen, urllib2.HTTPError, exp_msg,
+    exception_test(urllib.request.urlopen, urllib.error.HTTPError, exp_msg,
                    dynamic_server_builtins + filename)

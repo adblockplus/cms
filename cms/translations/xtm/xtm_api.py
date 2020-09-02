@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import json
 try:
-    import urlparse
+    import urllib.parse
 except ImportError:
     # It's Python 3
     import urllib.parse as urlparse
@@ -225,14 +225,14 @@ class XTMCloudAPI(object):
             # Hacky way to go around 415 error code
             files_to_upload = {'a': 'b'}
 
-        url = urlparse.urljoin(self.base_url, self._UrlPaths.CREATE)
+        url = urllib.parse.urljoin(self.base_url, self._UrlPaths.CREATE)
 
         response = self._execute(url, data=data, files=files_to_upload)
 
         if response.status_code != self._SuccessCodes.CREATE:
             # The creation was not successful
             raise XTMCloudException(response.status_code,
-                                    response.text.decode('utf-8'),
+                                    response.text,
                                     'creating job')
 
         data = json.loads(response.text.encode('utf-8'))
@@ -276,13 +276,13 @@ class XTMCloudAPI(object):
             files, 'files[{}]',
         )
 
-        if len(files_to_upload.keys()) == 0:
+        if len(list(files_to_upload.keys())) == 0:
             raise Exception('Error: No files provided for upload.')
 
         data = {'matchType': self._MATCH_TYPE[overwrite]}
         data.update(file_names)
 
-        url = urlparse.urljoin(
+        url = urllib.parse.urljoin(
             self.base_url, self._UrlPaths.UPLOAD.format(project_id),
         )
 
@@ -316,7 +316,7 @@ class XTMCloudAPI(object):
             If the request is flawed in any way.
 
         """
-        url = urlparse.urljoin(
+        url = urllib.parse.urljoin(
             self.base_url, self._UrlPaths.DOWNLOAD.format(project_id),
         )
 
@@ -358,7 +358,7 @@ class XTMCloudAPI(object):
             If the request is unsuccessful.
 
         """
-        url = urlparse.urljoin(
+        url = urllib.parse.urljoin(
             self.base_url, self._UrlPaths.GET_TARGET_LANG.format(project_id),
         )
 
@@ -368,7 +368,7 @@ class XTMCloudAPI(object):
             raise XTMCloudException(response.status_code, response.content,
                                     'extracting target languages')
 
-        data = json.loads(response.content.encode('utf-8'))
+        data = json.loads(response.content.decode('utf-8'))
         return {item['targetLanguage'] for item in data}
 
     def add_target_languages(self, project_id, target_languages):
@@ -391,7 +391,7 @@ class XTMCloudAPI(object):
             'targetLanguages': target_languages,
         })
 
-        url = urlparse.urljoin(
+        url = urllib.parse.urljoin(
             self.base_url, self._UrlPaths.ADD_TARGET_LANG.format(project_id),
         )
 
@@ -417,7 +417,7 @@ class XTMCloudAPI(object):
             Of workflow ids that match the name provided.
 
         """
-        url = urlparse.urljoin(self.base_url, self._UrlPaths.GET_WORKFLOW_IDS)
+        url = urllib.parse.urljoin(self.base_url, self._UrlPaths.GET_WORKFLOW_IDS)
 
         response = self._execute(url, params={'name': name})
 
@@ -426,7 +426,7 @@ class XTMCloudAPI(object):
                                     'extracting workflow ids')
 
         valid_ids = []
-        for item in json.loads(response.content.encode('utf-8')):
+        for item in json.loads(response.content.decode('utf-8')):
             if name.lower().replace(' ', '') == \
                     item['name'].lower().replace(' ', ''):
                 valid_ids.append(item['id'])
@@ -464,7 +464,7 @@ def get_token(username, password, user_id, base_url):
         'userId': user_id,
     })
 
-    url = urlparse.urljoin(base_url, 'auth/token')
+    url = urllib.parse.urljoin(base_url, 'auth/token')
 
     headers = {'content-type': 'application/json'}
 

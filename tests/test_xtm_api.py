@@ -15,7 +15,7 @@
 
 """Tests for the XTM API integration."""
 
-from __future__ import unicode_literals
+
 
 import json
 import zipfile
@@ -44,7 +44,7 @@ def test_token_generation(intercept, credentials, is_ok, err_msg, exp_token):
     """Test the API token generation."""
     args = credentials + [API_URL]
     if is_ok:
-        token = get_token(*args)
+        token = get_token(*args).decode('utf-8')
         assert token == exp_token
     else:
         exception_test(get_token, XTMCloudException, err_msg, *args)

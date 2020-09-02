@@ -3,14 +3,14 @@
 The test server will convert your content directory on the fly, your changes
 will become visible immediately. To run it you need:
 
-* Python 2.7
+* Python 3.7
 * [Jinja2](http://jinja.pocoo.org/) and
   [Markdown](https://pypi.python.org/pypi/Markdown) modules (can be installed by
   running `easy_install Jinja2 Markdown` from the command line)
 * A current copy of the
-  [cms repository](https://github.com/adblockplus/cms/) (can be
-  [downloaded as ZIP file](https://github.com/adblockplus/cms/archive/master.zip)
-  or cloned via `git clone https://github.com/adblockplus/cms.git`)
+  [cms-py3 branch](https://gitlab.com/eyeo/websites/cms/-/tree/cms-py3) (can be
+  cloned via `git clone https://gitlab.com/eyeo/websites/cms --branch cms-py3 --single-branch`)
+
 
 Optionally, the [Werkzeug](http://werkzeug.pocoo.org/) module can be installed
 as well, this will provide some developer features.

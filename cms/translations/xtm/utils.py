@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import collections
 import logging
 import os
 import time
 import json
-import ConfigParser
+import configparser
 
 from cms.utils import process_page
 import cms.translations.xtm.constants as const
@@ -80,7 +80,7 @@ def get_files_to_upload(source):
     page_strings = {}
 
     # 2. Cleaning up.
-    for page, string in raw_strings.iteritems():
+    for page, string in raw_strings.items():
         if string:
             page_strings[page] = string
 
@@ -197,7 +197,7 @@ def resolve_locales(api, source):
         project_id=project_id,
     )
 
-    enabled_locales = {l.encode('utf-8') for l in languages}
+    enabled_locales = {l for l in languages}
 
     if len(enabled_locales - local_locales) != 0:
         raise Exception(const.ErrorMessages.LOCALES_NOT_PRESENT.format(
@@ -441,9 +441,9 @@ def write_to_file(data, file_path):
 
 def input_fn(text):
     try:
-        return raw_input(text)
-    except Exception:
         return input(text)
+    except Exception:
+        return eval(input(text))
 
 
 def extract_workflow_id(api, args):
@@ -524,5 +524,5 @@ def get_api_url(args, source):
 
     try:
         return config.get(const.Config.XTM_SECTION, const.Config.URL_OPTION)
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+    except (configparser.NoOptionError, configparser.NoSectionError):
         return const.API_URL
