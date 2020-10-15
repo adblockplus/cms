@@ -521,7 +521,7 @@ class TemplateConverter(Converter):
         return jinja2.Markup('<a{}>'.format(''.join(
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
-                ('hreflang', locale),
+                ('hreflang', locale.replace("_", "-")),
             ] + attrs.items()
         )))
 
