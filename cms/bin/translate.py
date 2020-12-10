@@ -22,7 +22,7 @@ import logging
 import os
 import posixpath
 import sys
-import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 import zipfile
 
 import urllib3

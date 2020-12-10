@@ -1,5 +1,5 @@
 import pytest
-import urllib.request, urllib.error, urllib.parse
+import urllib.request, urllib.error
 import os
 
 from tests.test_page_outputs import dynamic_expected_outputs

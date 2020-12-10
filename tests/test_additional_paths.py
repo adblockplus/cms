@@ -14,7 +14,7 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
 
 import py
 import pytest

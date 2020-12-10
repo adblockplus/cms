@@ -20,7 +20,7 @@ import subprocess
 import time
 import zipfile
 from io import BytesIO
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
 
 import pytest
 

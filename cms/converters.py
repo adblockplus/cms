@@ -543,7 +543,7 @@ class TemplateConverter(Converter):
     def filter_metadata(self, filters, metadata):
         if filters is None:
             return True
-        for filter_name, filter_value in list(filters.items()):
+        for filter_name, filter_value in filters.items():
             if filter_name not in metadata:
                 return False
             if isinstance(metadata[filter_name], list):

@@ -16,11 +16,7 @@
 
 
 import json
-try:
-    import urllib.parse
-except ImportError:
-    # It's Python 3
-    import urllib.parse as urlparse
+import urllib.parse
 
 import requests
 

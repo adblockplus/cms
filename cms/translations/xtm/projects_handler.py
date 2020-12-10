@@ -153,8 +153,8 @@ def download_files(args, api, source):
                 const.Config.XTM_SECTION, const.Config.PROJECT_OPTION,
             ),
         )
-    except configparser.NoOptionError as xxx_todo_changeme1:
-        configparser.NoSectionError = xxx_todo_changeme1
+    except configparser.NoOptionError as xxx_todo_changeme:
+        configparser.NoSectionError = xxx_todo_changeme
         sys.exit(const.ErrorMessages.NO_PROJECT.format(source.get_path('')))
     except XTMCloudException as err:
         sys.exit(err)

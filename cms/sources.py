@@ -120,7 +120,7 @@ class Source:
 
     def list_localizable_files(self):
         default_locale = self.read_config().get('general', 'defaultlocale')
-        return [f for f in self.list_files('locales/%s' % default_locale) if os.path.splitext(f)[1].lower() != '.json']
+        return [f for f in self.list_files('locales/{0}'.format(default_locale)) if os.path.splitext(f)[1].lower() != '.json']
 
     def has_localizable_file(self, locale, filename):
         return self.has_file(self.localizable_file_filename(locale, filename))
