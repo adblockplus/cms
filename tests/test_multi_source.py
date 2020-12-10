@@ -14,7 +14,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import pytest
 
 from cms.sources import Source, MultiSource

@@ -90,7 +90,8 @@ def test_dynamic_server_handler(filename, expected_output, temp_site):
 
     generated_page = handler(environ, lambda x, y: None)
 
-    assert cleanup(expected_output) == cleanup(generated_page[0].decode('utf-8'))
+    assert cleanup(expected_output) == cleanup(
+        generated_page[0].decode('utf-8'))
 
 
 @pytest.mark.parametrize('page', ['en/translate', '/en/translate'])

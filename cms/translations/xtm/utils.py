@@ -14,7 +14,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import collections
 import logging
 import os
@@ -197,7 +196,7 @@ def resolve_locales(api, source):
         project_id=project_id,
     )
 
-    enabled_locales = {l for l in languages}
+    enabled_locales = {lang for lang in languages}
 
     if len(enabled_locales - local_locales) != 0:
         raise Exception(const.ErrorMessages.LOCALES_NOT_PRESENT.format(

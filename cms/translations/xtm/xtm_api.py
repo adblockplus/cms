@@ -14,7 +14,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import json
 import urllib.parse
 
@@ -32,7 +31,7 @@ class XTMCloudException(Exception):
                      'code {1}: {2}')
 
     def __init__(self, code, msg, action):
-        """Constructor.
+        """Construct XTMCloudException object.
 
         Parameters
         ----------
@@ -78,7 +77,7 @@ class XTMCloudAPI(object):
         GET_WORKFLOW_IDS = 200
 
     def __init__(self, token, base_url):
-        """Constructor.
+        """Construct XTMCloudAPI object.
 
         Parameters
         ----------
@@ -413,7 +412,8 @@ class XTMCloudAPI(object):
             Of workflow ids that match the name provided.
 
         """
-        url = urllib.parse.urljoin(self.base_url, self._UrlPaths.GET_WORKFLOW_IDS)
+        url = urllib.parse.urljoin(
+            self.base_url, self._UrlPaths.GET_WORKFLOW_IDS)
 
         response = self._execute(url, params={'name': name})
 

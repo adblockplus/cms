@@ -124,7 +124,7 @@ def configure_locales(crowdin_api, local_locales, enabled_locales,
     logger.info('Checking which locales are supported by Crowdin...')
     response = crowdin_api.request('GET', 'supported-languages')
 
-    supported_locales = {l['crowdin_code'] for l in response}
+    supported_locales = {locale['crowdin_code'] for locale in response}
 
     # We need to map the locale names we use to the ones that Crowdin is expecting
     # and at the same time ensure that they are supported.
@@ -294,7 +294,7 @@ def crowdin_sync(source_dir, crowdin_api_key):
         page_strings = extract_strings(source, defaultlocale)
 
         local_locales = source.list_locales() - {defaultlocale}
-        enabled_locales = {l['code'] for l in project_info['languages']}
+        enabled_locales = {lang['code'] for lang in project_info['languages']}
 
     required_locales = configure_locales(crowdin_api, local_locales,
                                          enabled_locales, defaultlocale)

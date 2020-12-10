@@ -16,7 +16,6 @@
 """Tests for the XTM API integration."""
 
 
-
 import json
 import zipfile
 from io import BytesIO

@@ -165,7 +165,7 @@ def get_page_params(source, locale, page, format=None, site_url_override=None,
 
     params['templatedata'] = source.read_template(params['template'])
 
-    locales = [l for l in source.list_locales() if source.has_locale(l, page)]
+    locales = [locl for locl in source.list_locales() if source.has_locale(locl, page)]
     if defaultlocale not in locales:
         locales.append(defaultlocale)
     locales.sort()

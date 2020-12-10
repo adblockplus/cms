@@ -14,7 +14,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import os
 import html.parser
 import re
@@ -522,7 +521,7 @@ class TemplateConverter(Converter):
         return jinja2.Markup('<a{}>'.format(''.join(
             ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
                 ('href', url),
-                ('hreflang', locale.replace("_", "-")),
+                ('hreflang', locale.replace('_', '-')),
             ] + list(attrs.items())
         )))
 
