@@ -26,6 +26,9 @@ from cms.sources import create_source
 
 MIN_TRANSLATED = 0.3
 
+# Default extension for generated page files
+DEFAULT_EXT = '.html'
+
 
 def ensure_dirs(partial_path, path_parts):
     """Create an entire path of directories.
@@ -169,6 +172,13 @@ def generate_pages(repo, output_dir, relative=False):
         source.has_locale = has_locale
         source.resolve_link.cache_clear()
 
+        # Appends default extension to page path if there isn't one already present
+        def page_with_ext(page):
+            if not os.path.splitext(page)[1]:
+                return page + DEFAULT_EXT
+            else:
+                return page
+
         # Second pass: actually generate pages this time
         for locale, page in pagelist:
             pagedata = process_page(source, locale, page, relative=relative)
@@ -178,7 +188,7 @@ def generate_pages(repo, output_dir, relative=False):
             pagedata = re.sub(r'(<link\s[^<>]*\bhref="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
             pagedata = re.sub(r'(<img\s[^<>]*\bsrc="/[^"<>]+)', r'\1?%s' % source.version, pagedata)
 
-            write_file([locale] + page.split('/'), pagedata)
+            write_file([locale] + (page_with_ext(page)).split('/'), pagedata)
 
         for filename in source.list_localizable_files():
             for locale in locales:
