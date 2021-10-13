@@ -1,40 +1,25 @@
-# CMS #
+# CMS
 
-We use this CMS for [adblockplus.org](https://github.com/adblockplus/web.adblockplus.org/)
-and related websites. It converts a directory with content data into static
-files. You are free to use it for other projects but please keep in mind that we
-make no stability guarantees whatsoever and might change functionality any time.
+Multi-language static content management system used by Adblock Plus websites.
 
-## Getting started ##
+This project has been restarted as [eyeo/websites/liven](https://gitlab.com/eyeo/websites/liven).
 
-The easiest way to get started is to run a test server. The test server will 
-convert your content directory on the fly, your changes will become visible 
-immediately. To run it you need:
+[eyeo/websites/liven](https://gitlab.com/eyeo/websites/liven) is not in use in production yet.
 
-* Python 2.7
-* The modules listed in `requirements.txt` (can be installed by running 
-`pip install -r requirements.txt` from the command line).
-* A current copy of the
-  [cms repository](https://github.com/adblockplus/cms/) (can be
-  [downloaded as ZIP file](https://github.com/adblockplus/cms/archive/master.zip)
-  or cloned via `git clone https://github.com/adblockplus/cms.git`)
+## Dependencies
 
-Optionally, the [Werkzeug](http://werkzeug.pocoo.org/) module can be installed
-as well, this will provide some developer features.
+- Python 2.7
+- pip for Python 2
+- pip modules in requirements.txt (`pip install -r requirements.txt`)
 
-Run the `runserver.py` script from your content directory, e.g.:
+## Usage
 
-    python ../cms/runserver.py
+- Testing/development server `python path/to/cms/runserver.py path/to/website`
+- Production build `python path/to/cms/generate_static_pages.py path/to/website path/to/output`
 
-Alternatively, the content directory could also be specified as command line
-parameter of `runserver.py`. This will start a local web server on port 5000,
-e.g. the page `pages/example.md` will be accessible under
-`http://localhost:5000/en/example`.
+## Further reading
 
-Note that the test server is inefficient and shouldn't be run in production.
-There you should generate static files as explained below.
-
-## Documentation ##
+Caution: Translations are no longer being synced via crowdin, xtm, or csv in production.
 
 - How to use
     - [Running the test server](docs/usage/test-server.md)
