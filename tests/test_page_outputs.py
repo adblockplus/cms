@@ -18,7 +18,7 @@ def get_expected_outputs(test_type, with_common=True):
     if with_common:
         outputs = get_dir_contents(os.path.join(root, 'common'))
     outputs.update(get_dir_contents(os.path.join(root, test_type)))
-    return outputs.items()
+    return list(outputs.items())
 
 
 static_expected_outputs = get_expected_outputs('static')

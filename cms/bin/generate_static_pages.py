@@ -16,7 +16,7 @@
 import os
 import re
 import codecs
-import ConfigParser
+import configparser
 import logging
 from argparse import ArgumentParser
 import shutil
@@ -142,7 +142,7 @@ def generate_pages(repo, output_dir, relative=False):
         def get_locale_file(page):
             try:
                 return config.get('locale_overrides', page)
-            except ConfigParser.Error:
+            except configparser.Error:
                 return page
 
         pagelist = set()

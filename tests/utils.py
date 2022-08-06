@@ -20,7 +20,7 @@ import subprocess
 import time
 import zipfile
 from io import BytesIO
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import pytest
 
@@ -92,7 +92,7 @@ def _wait_for_server():
 
     while True:
         try:
-            urllib2.urlopen('http://localhost:5000/')
+            urllib.request.urlopen('http://localhost:5000/')
             break
         except Exception:
             time.sleep(.1)

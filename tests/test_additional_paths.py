@@ -14,7 +14,7 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import py
 import pytest
@@ -88,7 +88,7 @@ def test_ap_static(ap_static_output, page_name, expectation):
 
 @pytest.mark.parametrize('page_name,expectation', EXPECTATIONS)
 def test_dynamic(dynamic_server, page_name, expectation):
-    response = urllib2.urlopen(dynamic_server + page_name)
+    response = urllib.request.urlopen(dynamic_server + page_name)
     assert expectation in response.read()
 
 

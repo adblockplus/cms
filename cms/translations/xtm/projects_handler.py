@@ -15,7 +15,7 @@
 
 import sys
 import logging
-import ConfigParser
+import configparser
 import zipfile
 from io import BytesIO
 
@@ -47,7 +47,7 @@ def create_project(args, api, source):
         project_id = config.get(const.Config.XTM_SECTION,
                                 const.Config.PROJECT_OPTION)
         sys.exit(const.ErrorMessages.PROJECT_EXISTS.format(project_id))
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+    except (configparser.NoOptionError, configparser.NoSectionError):
         pass
 
     target_langs = utils.map_locales(source)
@@ -107,7 +107,8 @@ def upload_files(args, api, source):
     try:
         project_id = config.get(const.Config.XTM_SECTION,
                                 const.Config.PROJECT_OPTION)
-    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+    except configparser.NoOptionError as xxx_todo_changeme:
+        configparser.NoSectionError = xxx_todo_changeme
         sys.exit(const.ErrorMessages.NO_PROJECT.format(source.get_path('')))
 
     files_to_upload = utils.get_files_to_upload(source)
@@ -152,7 +153,8 @@ def download_files(args, api, source):
                 const.Config.XTM_SECTION, const.Config.PROJECT_OPTION,
             ),
         )
-    except ConfigParser.NoOptionError, ConfigParser.NoSectionError:
+    except configparser.NoOptionError as xxx_todo_changeme1:
+        configparser.NoSectionError = xxx_todo_changeme1
         sys.exit(const.ErrorMessages.NO_PROJECT.format(source.get_path('')))
     except XTMCloudException as err:
         sys.exit(err)

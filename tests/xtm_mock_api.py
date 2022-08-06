@@ -138,7 +138,7 @@ def create_project():
         )
 
     # To make everything easier, just add the 1st file to the class
-    if 'translationFiles[0].name' in form_data.keys():
+    if 'translationFiles[0].name' in list(form_data.keys()):
         xtm_mock.config['files'].append({
             'name': form_data['translationFiles[0].name'][0],
             'data': files['translationFiles[0].file'],

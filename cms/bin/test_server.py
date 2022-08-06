@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 import os
 import mimetypes
@@ -122,7 +122,7 @@ class DynamicServerHandler:
         default_page = self.source.read_config().get('general', 'defaultpage')
         possible_pages = [page, '/'.join([page, default_page]).lstrip('/')]
 
-        for page_format in converters.iterkeys():
+        for page_format in converters.keys():
             for p in possible_pages:
                 if self.source.has_page(p, page_format):
                     return p, process_page(self.source, locale, p, page_format,
@@ -221,7 +221,7 @@ class DynamicServerHandler:
 
         mime = mimetypes.guess_type(path)[0] or 'text/html'
 
-        if isinstance(data, unicode):
+        if isinstance(data, str):
             data = data.encode(UNICODE_ENCODING)
             mime = '{0}; charset={1}'.format(mime, UNICODE_ENCODING)
 
@@ -296,7 +296,7 @@ def run_builtins_server(handler, **kw):
         Defines the parameters and methods required to handle requests.
 
     """
-    from SocketServer import ThreadingMixIn
+    from socketserver import ThreadingMixIn
     from wsgiref.simple_server import WSGIServer, make_server
 
     class ThreadedWSGIServer(ThreadingMixIn, WSGIServer):
