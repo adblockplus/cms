@@ -23,6 +23,7 @@ from posixpath import relpath
 
 import jinja2
 import markdown
+import markupsafe
 
 from cms import utils
 
@@ -307,7 +308,7 @@ class Converter:
 
         def process_link(match):
             pre, attr, url, post = match.groups()
-            url = jinja2.Markup(url).unescape()
+            url = markupsafe.Markup(url).unescape()
 
             locale, new_url = self._params['source'].resolve_link(
                 url, self._params['locale'], self._params['page'],
@@ -317,14 +318,14 @@ class Converter:
                 url = new_url
                 if attr == 'href':
                     post += ' hreflang="{}"'\
-                        .format(jinja2.Markup.escape(locale))
+                        .format(markupsafe.Markup.escape(locale))
 
             if self._params['relative']:
                 current_page = '/{}/{}'.format(self._params['locale'],
                                                self._params['page'])
                 url = make_relative(current_page, url)
 
-            return ''.join((pre, jinja2.Markup.escape(url), post))
+            return ''.join((pre, markupsafe.Markup.escape(url), post))
 
         text = re.sub(r'(<[\w]+\s[^<>]*\b(href|src)=\")([^<>\"]+)(\")',
                       process_link, text)
@@ -379,11 +380,11 @@ class RawConverter(Converter):
 class MarkdownConverter(Converter):
     include_start_regex = r'(?:{}|{})'.format(
         Converter.include_start_regex,
-        re.escape(jinja2.escape(Converter.include_start_regex)),
+        re.escape(markupsafe.escape(Converter.include_start_regex)),
     )
     include_end_regex = r'(?:{}|{})'.format(
         Converter.include_end_regex,
-        re.escape(jinja2.escape(Converter.include_end_regex)),
+        re.escape(markupsafe.escape(Converter.include_end_regex)),
     )
 
     def get_html(self, source, filename):
@@ -488,7 +489,7 @@ class TemplateConverter(Converter):
         return result
 
     def translate(self, default, name, comment=None):
-        return jinja2.Markup(self.localize_string(
+        return markupsafe.Markup(self.localize_string(
             self._params['page'], name, default, comment, html_escapes,
         ))
 
@@ -496,7 +497,7 @@ class TemplateConverter(Converter):
         if page is None:
             page = self._params['page']
 
-        return jinja2.Markup(self.localize_string(
+        return markupsafe.Markup(self.localize_string(
             page, name, None, '', html_escapes, default_required=False,
         ))
 
@@ -518,8 +519,8 @@ class TemplateConverter(Converter):
 
         locale, url = self._params['source'].resolve_link(page, locale,
                                                           self._params['page'])
-        return jinja2.Markup('<a{}>'.format(''.join(
-            ' {}="{}"'.format(name, jinja2.escape(value)) for name, value in [
+        return markupsafe.Markup('<a{}>'.format(''.join(
+            ' {}="{}"'.format(name, markupsafe.escape(value)) for name, value in [
                 ('href', url),
                 ('hreflang', locale.replace("_", "-")),
             ] + list(attrs.items())
@@ -577,8 +578,8 @@ class TemplateConverter(Converter):
         for match in re.finditer(toc_re, content, re.S):
             flat.append({
                 'level': int(match.group(1)),
-                'anchor': jinja2.Markup(match.group(2)).unescape(),
-                'title': jinja2.Markup(match.group(3)).unescape(),
+                'anchor': markupsafe.Markup(match.group(2)).unescape(),
+                'title': markupsafe.Markup(match.group(3)).unescape(),
                 'subitems': [],
             })
 

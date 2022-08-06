@@ -3,3 +3,4 @@ urllib3
 jinja2
 werkzeug
 markdown
+markupsafe
