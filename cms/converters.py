@@ -26,18 +26,18 @@ import markdown
 
 from cms import utils
 
-# Monkey-patch Markdown's isBlockLevel function to ensure that no paragraphs
+# Monkey-patch Markdown's is_block_level function to ensure that no paragraphs
 # are inserted into the <head> tag
-orig_isBlockLevel = markdown.util.isBlockLevel
+orig_is_block_level = markdown.Markdown.is_block_level
 
 
-def isBlockLevel(tag):
+def is_block_level(self, tag):
     if tag == 'head':
         return True
-    return orig_isBlockLevel(tag)
+    return orig_is_block_level(self, tag)
 
 
-markdown.util.isBlockLevel = isBlockLevel
+markdown.Markdown.is_block_level = is_block_level
 
 html_escapes = {
     '<': '&lt;',
