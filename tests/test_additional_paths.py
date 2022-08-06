@@ -89,7 +89,7 @@ def test_ap_static(ap_static_output, page_name, expectation):
 @pytest.mark.parametrize('page_name,expectation', EXPECTATIONS)
 def test_dynamic(dynamic_server, page_name, expectation):
     response = urllib.request.urlopen(dynamic_server + page_name)
-    assert expectation in response.read()
+    assert expectation.encode('utf-8') in response.read()
 
 
 def test_create_source(tmpdir):

@@ -85,7 +85,7 @@ def test_lifecycle_error(multi_source, base_sources):
         with multi_source:
             raise Exception('42')
     for bs in base_sources:
-        assert bs.log[-1] == "exit: <type 'exceptions.Exception'> 42"
+        assert bs.log[-1] == "exit: <class 'Exception'> 42"
 
 
 def test_has_file(multi_source):

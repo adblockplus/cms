@@ -216,7 +216,7 @@ def test_clear_files(toydir):
 @pytest.mark.parametrize('path', ['de/test.json', 'de/dir1/dir2/test.json'])
 def test_write_data(toydir, path):
     """Test if writing data to files works as expected."""
-    data = bytes(json.dumps({'a': 'b'}))
+    data = json.dumps({'a': 'b'}).encode('utf-8')
 
     utils.write_to_file(data, str(toydir.join(path)))
 

@@ -34,7 +34,7 @@ def test_dynamic_werkzeug_good_page(dynamic_server_werkzeug):
     filename, expected_output = dynamic_expected_outputs[0]
     response = urllib.request.urlopen(dynamic_server_werkzeug + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output.encode('utf-8') in response.read().strip()
 
 
 @pytest.mark.slowtest
@@ -51,7 +51,7 @@ def test_dynamic_builtins_good_page(dynamic_server_builtins):
     filename, expected_output = dynamic_expected_outputs[0]
     response = urllib.request.urlopen(dynamic_server_builtins + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output.encode('utf-8') in response.read().strip()
 
 
 @pytest.mark.slowtest

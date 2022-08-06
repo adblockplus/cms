@@ -189,15 +189,13 @@ def resolve_locales(api, source):
         const.Config.XTM_SECTION, const.Config.PROJECT_OPTION,
     )
 
-    languages = run_and_wait(
+    enabled_locales = run_and_wait(
         api.get_target_languages,
         XTMCloudException,
         const.UNDER_ANALYSIS_MESSAGE,
         const.InfoMessages.WAITING_FOR_PROJECT,
         project_id=project_id,
     )
-
-    enabled_locales = {l.encode('utf-8') for l in languages}
 
     if len(enabled_locales - local_locales) != 0:
         raise Exception(const.ErrorMessages.LOCALES_NOT_PRESENT.format(

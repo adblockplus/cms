@@ -13,15 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
 import json
-try:
-    import urllib.parse
-except ImportError:
-    # It's Python 3
-    import urllib.parse as urlparse
-
+import urllib.parse
 import requests
 
 __all__ = [
@@ -130,6 +123,8 @@ class XTMCloudAPI(object):
             headers = auth_header
 
         if data:
+            if headers.get('content-type') == 'application/json':
+                data = json.dumps(data)
             response = requests.post(url, data=data, files=files,
                                      headers=headers, params=params,
                                      stream=stream)
@@ -232,10 +227,10 @@ class XTMCloudAPI(object):
         if response.status_code != self._SuccessCodes.CREATE:
             # The creation was not successful
             raise XTMCloudException(response.status_code,
-                                    response.text.decode('utf-8'),
+                                    response.text,
                                     'creating job')
 
-        data = json.loads(response.text.encode('utf-8'))
+        data = response.json()
 
         return data['projectId'], data['jobs']
 
@@ -290,10 +285,10 @@ class XTMCloudAPI(object):
 
         if response.status_code != self._SuccessCodes.UPLOAD:
             raise XTMCloudException(response.status_code,
-                                    response.text.encode('utf-8'),
+                                    response.text,
                                     'uploading files')
 
-        return json.loads(response.text.encode('utf-8'))['jobs']
+        return response.json()['jobs']
 
     def download_files(self, project_id, files_type='TARGET'):
         """Download files for a specific project.
@@ -365,10 +360,10 @@ class XTMCloudAPI(object):
         response = self._execute(url, stream=True)
 
         if response.status_code != self._SuccessCodes.GET_TARGET_LANGS:
-            raise XTMCloudException(response.status_code, response.content,
+            raise XTMCloudException(response.status_code, response.text,
                                     'extracting target languages')
 
-        data = json.loads(response.content.encode('utf-8'))
+        data = response.json()
         return {item['targetLanguage'] for item in data}
 
     def add_target_languages(self, project_id, target_languages):
@@ -387,9 +382,9 @@ class XTMCloudAPI(object):
             If the request to the API was not successful.
 
         """
-        data = json.dumps({
+        data = {
             'targetLanguages': target_languages,
-        })
+        }
 
         url = urllib.parse.urljoin(
             self.base_url, self._UrlPaths.ADD_TARGET_LANG.format(project_id),
@@ -400,7 +395,7 @@ class XTMCloudAPI(object):
         response = self._execute(url, data=data, headers=headers)
 
         if response.status_code != self._SuccessCodes.ADD_TARGET_LANGS:
-            raise XTMCloudException(response.status_code, response.content,
+            raise XTMCloudException(response.status_code, response.text,
                                     'adding target languages to project')
 
     def get_workflows_by_name(self, name):
@@ -422,11 +417,11 @@ class XTMCloudAPI(object):
         response = self._execute(url, params={'name': name})
 
         if response.status_code != self._SuccessCodes.GET_WORKFLOW_IDS:
-            raise XTMCloudException(response.status_code, response.content,
+            raise XTMCloudException(response.status_code, response.text,
                                     'extracting workflow ids')
 
         valid_ids = []
-        for item in json.loads(response.content.encode('utf-8')):
+        for item in response.json():
             if name.lower().replace(' ', '') == \
                     item['name'].lower().replace(' ', ''):
                 valid_ids.append(item['id'])
@@ -458,21 +453,21 @@ def get_token(username, password, user_id, base_url):
         If the credentials provided were invalid.
 
     """
-    request_body = json.dumps({
+    request_body = {
         'client': username,
         'password': password,
         'userId': user_id,
-    })
+    }
 
     url = urllib.parse.urljoin(base_url, 'auth/token')
 
     headers = {'content-type': 'application/json'}
 
-    response = requests.post(url, data=request_body, headers=headers)
+    response = requests.post(url, json=request_body, headers=headers)
 
     if response.status_code == 200:
-        return json.loads(response.text)['token'].encode()
+        return response.json()['token']
 
     raise XTMCloudException(response.status_code,
-                            response.text.encode('utf-8'),
+                            response.text,
                             'generating token')
