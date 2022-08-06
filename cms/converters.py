@@ -56,6 +56,7 @@ class AttributeParser(html.parser.HTMLParser):
     _attrs = None
 
     def __init__(self, whitelist):
+        super().__init__(convert_charrefs=True)
         self._whitelist = whitelist
 
     def parse(self, text, pagename):
