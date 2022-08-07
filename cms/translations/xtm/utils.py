@@ -338,7 +338,7 @@ def run_and_wait(func, exc, err_msg, user_msg=None, retry_delay=1,
         The function to be run.
     retry_delay: int
         The amount of time to wait on this specific run (in seconds).
-    exc: Exception
+    exc: Type[Exception]
         The exception we expect to be raised.
     err_msg: str
         The message we expect to be in the exception.
