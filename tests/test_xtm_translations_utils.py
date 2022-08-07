@@ -191,7 +191,7 @@ def test_resolve_locales_raise_exception(intercept_populated, temp_site):
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
     exp_msg = ('The following languages are enabled in the API, but not '
-               "listed in locales: set(['ro_RO'])! Please remove them manually"
+               "listed in locales: {'ro_RO'}! Please remove them manually"
                ' from project number 1234 and then re-run the script!')
 
     exception_test(utils.resolve_locales, Exception, exp_msg, api, source)
