@@ -252,6 +252,7 @@ def parse_arguments():
     parser.add_argument('--port', default=5000, type=int,
                         help='TCP port the server will listen on. Default '
                              '5000.')
+    parser.add_argument('--no_reload', action='store_true')
 
     return parser.parse_args()
 
@@ -324,7 +325,7 @@ def main():
     handler = DynamicServerHandler(args.host, args.port, args.path)
 
     try:
-        run_werkzeug_server(handler, use_reloader=True, use_debugger=True)
+        run_werkzeug_server(handler, use_reloader=not args.no_reload, use_debugger=True)
     except ImportError:
         run_builtins_server(handler)
 

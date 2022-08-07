@@ -61,7 +61,7 @@ def run_test_server(site_path, new_env=None):
         The url where the server runs.
 
     """
-    args = ['python', 'runserver.py', site_path]
+    args = ['python', 'runserver.py', '--no_reload', site_path]
     # Werkzeug is a dependency of flask which we are using for the mock api
     # however there is an issue with Werkzeug that prevents it from properly
     # handling the SIGTERM sent by p.kill() or terminate()
