@@ -8,8 +8,8 @@ This project has been restarted as [eyeo/websites/liven](https://gitlab.com/eyeo
 
 ## Dependencies
 
-- Python 2.7
-- pip for Python 2
+- Python 3
+- pip for Python 3
 - pip modules in requirements.txt (`pip install -r requirements.txt`)
 
 ## Usage
