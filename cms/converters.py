@@ -14,7 +14,6 @@
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 import os
 import html.parser
 import re
