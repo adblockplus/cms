@@ -6,7 +6,7 @@ from wsgi_intercept import urllib3_intercept
 from wsgi_intercept import add_wsgi_intercept
 from wsgi_intercept import remove_wsgi_intercept
 
-import crowdin_mock_api
+from . import crowdin_mock_api
 from cms.bin import translate
 
 

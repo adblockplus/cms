@@ -3,7 +3,7 @@
 The test server will convert your content directory on the fly, your changes
 will become visible immediately. To run it you need:
 
-* Python 2.7
+* Python 3
 * [Jinja2](http://jinja.pocoo.org/) and
   [Markdown](https://pypi.python.org/pypi/Markdown) modules (can be installed by
   running `easy_install Jinja2 Markdown` from the command line)

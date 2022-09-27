@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import pytest
 
@@ -85,7 +85,7 @@ def test_lifecycle_error(multi_source, base_sources):
         with multi_source:
             raise Exception('42')
     for bs in base_sources:
-        assert bs.log[-1] == "exit: <type 'exceptions.Exception'> 42"
+        assert bs.log[-1] == "exit: <class 'Exception'> 42"
 
 
 def test_has_file(multi_source):

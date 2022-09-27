@@ -22,7 +22,7 @@ import logging
 import os
 import posixpath
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import zipfile
 
 import urllib3
@@ -43,9 +43,9 @@ class CrowdinAPI:
 
     def raw_request(self, request_method, api_endpoint, query_params=(), **kwargs):
         url = '/api/project/%s/%s?%s' % (
-            urllib.quote(self.project_name),
-            urllib.quote(api_endpoint),
-            urllib.urlencode((('key', self.api_key),) + query_params),
+            urllib.parse.quote(self.project_name),
+            urllib.parse.quote(api_endpoint),
+            urllib.parse.urlencode((('key', self.api_key),) + query_params),
         )
         try:
             response = self.connection.request(
@@ -62,8 +62,8 @@ class CrowdinAPI:
     def request(self, request_method, api_endpoint, data=None, files=None):
         fields = []
         if data:
-            for name, value in data.iteritems():
-                if isinstance(value, basestring):
+            for name, value in data.items():
+                if isinstance(value, str):
                     fields.append((name, value))
                 else:
                     fields.extend((name + '[]', v) for v in value)
@@ -174,7 +174,7 @@ def list_remote_files(project_info):
 def list_local_files(page_strings):
     local_files = set()
     local_directories = set()
-    for page, strings in page_strings.iteritems():
+    for page, strings in page_strings.items():
         if strings:
             local_files.add(page + '.json')
             while '/' in page:
@@ -219,7 +219,7 @@ def upload_translations(crowdin_api, source_dir, new_files, required_locales):
                     yield (file_name, f.read(), 'application/json')
 
     if new_files:
-        for locale, crowdin_locale in required_locales.iteritems():
+        for locale, crowdin_locale in required_locales.items():
             for files in grouper(open_locale_files(locale, new_files),
                                  crowdin_api.FILES_PER_REQUEST):
                 logger.info('Uploading %d existing translation '
@@ -251,7 +251,7 @@ def download_translations(crowdin_api, source_dir, required_locales):
     response = crowdin_api.raw_request('GET', 'download/all.zip')
 
     inverted_required_locales = {crowdin: local for local, crowdin in
-                                 required_locales.iteritems()}
+                                 required_locales.items()}
     logger.info('Extracting translations archive...')
     with zipfile.ZipFile(io.BytesIO(response.data), 'r') as archive:
         locale_path = os.path.join(source_dir, 'locales')
@@ -328,7 +328,7 @@ def crowdin_sync(source_dir, crowdin_api_key):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print >>sys.stderr, 'Usage: python -m cms.bin.translate www_directory crowdin_project_api_key [logging_level]'
+        print('Usage: python -m cms.bin.translate www_directory crowdin_project_api_key [logging_level]', file=sys.stderr)
         sys.exit(1)
 
     logging.basicConfig()

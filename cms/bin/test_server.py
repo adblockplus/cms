@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
 
 import os
 import mimetypes
@@ -122,7 +121,7 @@ class DynamicServerHandler:
         default_page = self.source.read_config().get('general', 'defaultpage')
         possible_pages = [page, '/'.join([page, default_page]).lstrip('/')]
 
-        for page_format in converters.iterkeys():
+        for page_format in converters.keys():
             for p in possible_pages:
                 if self.source.has_page(p, page_format):
                     return p, process_page(self.source, locale, p, page_format,
@@ -221,7 +220,7 @@ class DynamicServerHandler:
 
         mime = mimetypes.guess_type(path)[0] or 'text/html'
 
-        if isinstance(data, unicode):
+        if isinstance(data, str):
             data = data.encode(UNICODE_ENCODING)
             mime = '{0}; charset={1}'.format(mime, UNICODE_ENCODING)
 
@@ -252,6 +251,7 @@ def parse_arguments():
     parser.add_argument('--port', default=5000, type=int,
                         help='TCP port the server will listen on. Default '
                              '5000.')
+    parser.add_argument('--no_reload', action='store_true')
 
     return parser.parse_args()
 
@@ -296,7 +296,7 @@ def run_builtins_server(handler, **kw):
         Defines the parameters and methods required to handle requests.
 
     """
-    from SocketServer import ThreadingMixIn
+    from socketserver import ThreadingMixIn
     from wsgiref.simple_server import WSGIServer, make_server
 
     class ThreadedWSGIServer(ThreadingMixIn, WSGIServer):
@@ -324,7 +324,7 @@ def main():
     handler = DynamicServerHandler(args.host, args.port, args.path)
 
     try:
-        run_werkzeug_server(handler, use_reloader=True, use_debugger=True)
+        run_werkzeug_server(handler, use_reloader=not args.no_reload, use_debugger=True)
     except ImportError:
         run_builtins_server(handler)
 

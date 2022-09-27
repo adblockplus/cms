@@ -20,7 +20,7 @@ import subprocess
 import time
 import zipfile
 from io import BytesIO
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import pytest
 
@@ -61,7 +61,7 @@ def run_test_server(site_path, new_env=None):
         The url where the server runs.
 
     """
-    args = ['python', 'runserver.py', site_path]
+    args = ['python', 'runserver.py', '--no_reload', site_path]
     # Werkzeug is a dependency of flask which we are using for the mock api
     # however there is an issue with Werkzeug that prevents it from properly
     # handling the SIGTERM sent by p.kill() or terminate()
@@ -92,7 +92,7 @@ def _wait_for_server():
 
     while True:
         try:
-            urllib2.urlopen('http://localhost:5000/')
+            urllib.request.urlopen('http://localhost:5000/')
             break
         except Exception:
             time.sleep(.1)

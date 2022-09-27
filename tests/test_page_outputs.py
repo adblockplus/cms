@@ -18,7 +18,7 @@ def get_expected_outputs(test_type, with_common=True):
     if with_common:
         outputs = get_dir_contents(os.path.join(root, 'common'))
     outputs.update(get_dir_contents(os.path.join(root, test_type)))
-    return outputs.items()
+    return list(outputs.items())
 
 
 static_expected_outputs = get_expected_outputs('static')
@@ -90,7 +90,7 @@ def test_dynamic_server_handler(filename, expected_output, temp_site):
 
     generated_page = handler(environ, lambda x, y: None)
 
-    assert cleanup(expected_output) == cleanup(generated_page[0])
+    assert cleanup(expected_output) == cleanup(generated_page[0].decode('utf-8'))
 
 
 @pytest.mark.parametrize('page', ['en/translate', '/en/translate'])

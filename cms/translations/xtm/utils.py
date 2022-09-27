@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import collections
 import logging
 import os
 import time
 import json
-import ConfigParser
+import configparser
 
 from cms.utils import process_page
 import cms.translations.xtm.constants as const
@@ -80,7 +80,7 @@ def get_files_to_upload(source):
     page_strings = {}
 
     # 2. Cleaning up.
-    for page, string in raw_strings.iteritems():
+    for page, string in raw_strings.items():
         if string:
             page_strings[page] = string
 
@@ -189,15 +189,13 @@ def resolve_locales(api, source):
         const.Config.XTM_SECTION, const.Config.PROJECT_OPTION,
     )
 
-    languages = run_and_wait(
+    enabled_locales = run_and_wait(
         api.get_target_languages,
         XTMCloudException,
         const.UNDER_ANALYSIS_MESSAGE,
         const.InfoMessages.WAITING_FOR_PROJECT,
         project_id=project_id,
     )
-
-    enabled_locales = {l.encode('utf-8') for l in languages}
 
     if len(enabled_locales - local_locales) != 0:
         raise Exception(const.ErrorMessages.LOCALES_NOT_PRESENT.format(
@@ -338,7 +336,7 @@ def run_and_wait(func, exc, err_msg, user_msg=None, retry_delay=1,
         The function to be run.
     retry_delay: int
         The amount of time to wait on this specific run (in seconds).
-    exc: Exception
+    exc: Type[Exception]
         The exception we expect to be raised.
     err_msg: str
         The message we expect to be in the exception.
@@ -441,9 +439,9 @@ def write_to_file(data, file_path):
 
 def input_fn(text):
     try:
-        return raw_input(text)
-    except Exception:
         return input(text)
+    except Exception:
+        return eval(input(text))
 
 
 def extract_workflow_id(api, args):
@@ -524,5 +522,5 @@ def get_api_url(args, source):
 
     try:
         return config.get(const.Config.XTM_SECTION, const.Config.URL_OPTION)
-    except (ConfigParser.NoOptionError, ConfigParser.NoSectionError):
+    except (configparser.NoOptionError, configparser.NoSectionError):
         return const.API_URL

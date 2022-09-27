@@ -15,7 +15,7 @@
 
 """Tests for the XTM API integration."""
 
-from __future__ import unicode_literals
+
 
 import json
 import zipfile

@@ -1,9 +1,9 @@
 import pytest
-import urllib2
 import os
+import requests
 
 from tests.test_page_outputs import dynamic_expected_outputs
-from tests.utils import run_test_server, exception_test
+from tests.utils import run_test_server
 
 
 @pytest.fixture(scope='function')
@@ -32,32 +32,34 @@ def dynamic_server_builtins(temp_site, tmpdir):
 @pytest.mark.slowtest
 def test_dynamic_werkzeug_good_page(dynamic_server_werkzeug):
     filename, expected_output = dynamic_expected_outputs[0]
-    response = urllib2.urlopen(dynamic_server_werkzeug + filename)
+    response = requests.get(dynamic_server_werkzeug + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output in response.text
 
 
 @pytest.mark.slowtest
 def test_dynamic_werkzeug_not_found(dynamic_server_werkzeug):
     filename = 'en/no-page-here'
     exp_msg = 'Not Found'
+    response = requests.get(dynamic_server_werkzeug + filename)
 
-    exception_test(urllib2.urlopen, urllib2.HTTPError, exp_msg,
-                   dynamic_server_werkzeug + filename)
+    assert response.status_code == 404
+    assert exp_msg in response.text
 
 
 @pytest.mark.slowtest
 def test_dynamic_builtins_good_page(dynamic_server_builtins):
     filename, expected_output = dynamic_expected_outputs[0]
-    response = urllib2.urlopen(dynamic_server_builtins + filename)
+    response = requests.get(dynamic_server_builtins + filename)
 
-    assert expected_output in response.read().strip()
+    assert expected_output in response.text
 
 
 @pytest.mark.slowtest
 def test_dynamic_builtins_not_found(dynamic_server_builtins):
     filename = 'en/no-page-here'
     exp_msg = 'Not Found'
+    response = requests.get(dynamic_server_builtins + filename)
 
-    exception_test(urllib2.urlopen, urllib2.HTTPError, exp_msg,
-                   dynamic_server_builtins + filename)
+    assert response.status_code == 404
+    assert exp_msg in response.text

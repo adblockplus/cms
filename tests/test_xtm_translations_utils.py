@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import unicode_literals
+
 
 import json
 import os
@@ -191,7 +191,7 @@ def test_resolve_locales_raise_exception(intercept_populated, temp_site):
     source = FileSource(str(temp_site))
     source.write_to_config('XTM', 'project_id', str(_PROJECT_ID))
     exp_msg = ('The following languages are enabled in the API, but not '
-               "listed in locales: set(['ro_RO'])! Please remove them manually"
+               "listed in locales: {'ro_RO'}! Please remove them manually"
                ' from project number 1234 and then re-run the script!')
 
     exception_test(utils.resolve_locales, Exception, exp_msg, api, source)
@@ -216,7 +216,7 @@ def test_clear_files(toydir):
 @pytest.mark.parametrize('path', ['de/test.json', 'de/dir1/dir2/test.json'])
 def test_write_data(toydir, path):
     """Test if writing data to files works as expected."""
-    data = bytes(json.dumps({'a': 'b'}))
+    data = json.dumps({'a': 'b'}).encode('utf-8')
 
     utils.write_to_file(data, str(toydir.join(path)))
 

@@ -6,10 +6,12 @@ This project has been restarted as [eyeo/websites/liven](https://gitlab.com/eyeo
 
 [eyeo/websites/liven](https://gitlab.com/eyeo/websites/liven) is not in use in production yet.
 
+For the legacy Python 2.7 version of this project refer to the [eyeo-python2.7-cms](https://gitlab.com/eyeo/websites/cms/-/tree/eyeo-python2.7-cms) branch.
+
 ## Dependencies
 
-- Python 2.7
-- pip for Python 2
+- Python 3
+- pip for Python 3
 - pip modules in requirements.txt (`pip install -r requirements.txt`)
 
 ## Usage
